@@ -194,6 +194,29 @@ class ImageData
 	}
 	
 	
+	extractScores()
+	{
+		let scores = []
+		for (let i = 0; i < 12; i++)
+			scores.push(this.extractRegion(1126, 52 + 52 * i, 92, 43))
+		
+		for (let i = 0; i < 12; i++)
+		{
+			let isYellow = scores[i].wholeImageProximity(241, 220, 15)
+			
+			if (isYellow > 0.7)
+				scores[i].binarize(77, 85, 64)
+			else
+				scores[i].binarize(255, 255, 255)
+		}
+		
+		for (let i = 0; i < 12; i++)
+			scores[i].createCache()
+		
+		return scores
+	}
+	
+	
 	static colorProximity(r1, g1, b1, r2, g2, b2)
 	{
 		let rFactor = Math.abs(r1 - r2) / 255
@@ -378,7 +401,18 @@ class ImageData
 	}
 	
 	
-	scoreGlyph(glyph, xPen, debug = false)
+	getRegionFilling(xMin, yMin, w, h)
+	{
+		let result = 0
+		for (let y = 0; y < h; y++)
+			for (let x = 0; x < w; x++)
+				result += this.getBinaryPixel(x + xMin, y + yMin) ? 1 : 0
+				
+		return result / (w * h)
+	}
+	
+	
+	scoreGlyph(glyph, xPen, forNames = true, debug = false)
 	{
 		let glyphMaxDist = 0
 		let glyphAvgDist = 0
@@ -437,10 +471,10 @@ class ImageData
 		let endColumn = this.cacheNextFilledColumn[xPen + glyph.data.imageData.width + 4] //this.findNextBinaryColumn(xPen + glyph.data.imageData.width + 4, true)
 		let prevColumn = this.cachePrevFilledColumn[xPen + glyph.data.imageData.width + 1] //this.findPreviousBinaryColumn(xPen + glyph.data.imageData.width + 1, true)
 		
-		if (nextColumn == null || prevColumn == null)
+		if (forNames && (nextColumn == null || prevColumn == null))
 			return null
 		
-		if (nextColumn - xPen < 2 || (endColumn == null && prevColumn - xPen < 2))
+		if (forNames && (nextColumn - xPen < 2 || (endColumn == null && prevColumn - xPen < 2)))
 			return null
 		
 		let estimatedWidthBonus = nextColumn - xPen
@@ -466,6 +500,12 @@ class ImageData
 		score -= wrongColumns * 5
 		score += Math.min(15, glyph.data.imageData.width) * 0.05
 		
+		if (!forNames)
+		{
+			score /= (glyphMaxDist + 1) * 0.1
+			score /= (targetMaxDist + 1) * 0.1
+		}
+		
 		if (debug)
 			console.log(
 				"x(" + xPen.toString().padStart(3) + ") " +
@@ -477,5 +517,113 @@ class ImageData
 				"target { maxDist(" + targetMaxDist.toFixed(2).padStart(6) + ") avgDist(" + targetAvgDist.toFixed(2).padStart(6) + ") avgDistTrunc(" + targetAvgDistTruncated.toFixed(2).padStart(6) + ") }")
 			
 		return score
+	}
+	
+	
+	*recognizePlayerIterable(resultObj)
+	{
+		let str = ""
+		let x = 0
+		while (true)
+		{
+			//console.log("\n\n\n\n")
+			let scores = []
+			
+			for (let skip = -1; skip <= 1; skip++)
+			{
+				let xBegin = this.findNextBinaryColumn(x + skip, true)
+				if (xBegin == null)
+					break
+				
+				for (let glyph of nameGlyphs)
+				{
+					let score = this.scoreGlyph(glyph, xBegin + skip)
+					if (score == null)
+						continue
+					
+					if (skip < 0)
+						score -= 0.03
+					
+					scores.push({ x: xBegin + skip, glyph: glyph, score: score })
+				}
+				
+				yield null
+			}
+			
+			if (scores.length == 0)
+				break
+			
+			scores.sort((a, b) => b.score - a.score)
+			
+			if (false)
+			{
+				for (let g = 0; g < 10; g++)
+					this.scoreGlyph(scores[g].glyph, scores[g].x, true)
+			}
+			
+			let chosen = scores[0]
+			
+			if (chosen.x - x > 6)
+				str += " "
+			
+			str += chosen.glyph.c
+			
+			for (let y = 0; y < this.imageData.height; y++)
+			{
+				if (!this.getBinaryPixel(chosen.x, y))
+					this.setPixel(chosen.x, y, 0, 0, 255)
+			}
+			
+			x = chosen.x + chosen.glyph.data.imageData.width + 1
+			
+			yield null
+		}
+		
+		resultObj.name = str
+	}
+	
+	
+	*recognizeScoreIterable(resultObj)
+	{
+		let value = 0
+		let x = this.imageData.width - 18 * 5
+		while (x < this.imageData.width)
+		{
+			//console.log("\n\n\n\n")
+			
+			let regionFilling = this.getRegionFilling(x, 0, 18, this.imageData.height)
+			if (regionFilling > 0.05)
+			{
+				let scores = []
+				for (let glyph of scoreGlyphs)
+				{
+					let score = this.scoreGlyph(glyph, x, false)
+					if (score == null)
+						continue
+					
+					scores.push({ x: x, glyph: glyph, score: score })
+				}
+				
+				if (scores.length == 0)
+					break
+				
+				scores.sort((a, b) => b.score - a.score)
+
+				let chosen = scores[0]
+				value = (value * 10) + (chosen.glyph.c.charCodeAt(0) - "0".charCodeAt(0))
+				
+				for (let y = 0; y < this.imageData.height; y++)
+				{
+					if (!this.getBinaryPixel(chosen.x, y))
+						this.setPixel(chosen.x, y, 0, 0, 255)
+				}
+			}
+			
+			x += 18
+			
+			yield null
+		}
+		
+		resultObj.score = value
 	}
 }

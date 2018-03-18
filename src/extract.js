@@ -8,6 +8,7 @@ function setImage(input)
 	charImages = []
 	charInputs = []
 	
+	let extractScores = document.getElementById("checkboxScores").checked
 	let withSpaces = document.getElementById("checkboxSpaces").checked
 	
 	ImageData.fromSrc(inputGetImageSrc(input), (img) =>
@@ -19,50 +20,50 @@ function setImage(input)
 		
 		let table = document.createElement("table")
 		
-		let players = img.extractPlayers()
-		for (let player of players)
+		if (extractScores)
 		{
-			let xPrev = null
-			let x = 0
-			while (true)
+			let scores = img.extractScores()
+			for (let score of scores)
 			{
-				let xBegin = player.findNextBinaryColumn(x, true)
-				if (xBegin == null)
-					break
-				
-				let xEnd = player.findNextBinaryColumn(xBegin, false)
-				if (xEnd == null)
-					break
-				
-				if (xEnd == xBegin)
-					break
-				
-				if (!withSpaces)
-					xPrev = xBegin
-				
-				if (xPrev != null)
+				for (let x = score.imageData.width - 18; x > 0; x -= 18)
 				{
-					let charImage = player.extractRegion(xPrev, 0, xEnd - xPrev, player.imageData.height)
-					
-					let tr = document.createElement("tr")
-					
-					let td1 = document.createElement("td")
-					td1.appendChild(charImage.makeCanvas())
-					tr.appendChild(td1)
-					
-					let td2 = document.createElement("td")
-					let charInput = document.createElement("input")
-					td2.appendChild(charInput)
-					tr.appendChild(td2)
-					
-					table.appendChild(tr)
-					
-					charImages.push(charImage)
-					charInputs.push(charInput)
+					let charImage = score.extractRegion(x, 0, 18, score.imageData.height)
+					addToTable(table, charImage)
 				}
-				
-				xPrev = xBegin
-				x = xEnd
+			}
+		}
+		else
+		{
+			let players = img.extractPlayers()
+			for (let player of players)
+			{
+				let xPrev = null
+				let x = 0
+				while (true)
+				{
+					let xBegin = player.findNextBinaryColumn(x, true)
+					if (xBegin == null)
+						break
+					
+					let xEnd = player.findNextBinaryColumn(xBegin, false)
+					if (xEnd == null)
+						break
+					
+					if (xEnd == xBegin)
+						break
+					
+					if (!withSpaces)
+						xPrev = xBegin
+					
+					if (xPrev != null)
+					{
+						let charImage = player.extractRegion(xPrev, 0, xEnd - xPrev, player.imageData.height)
+						addToTable(table, charImage)
+					}
+					
+					xPrev = xBegin
+					x = xEnd
+				}
 			}
 		}
 		
@@ -71,8 +72,33 @@ function setImage(input)
 }
 
 
+function addToTable(table, img)
+{
+	let tr = document.createElement("tr")
+	
+	let td1 = document.createElement("td")
+	td1.appendChild(img.makeCanvas())
+	tr.appendChild(td1)
+	
+	let td2 = document.createElement("td")
+	let charInput = document.createElement("input")
+	td2.appendChild(charInput)
+	tr.appendChild(td2)
+	
+	table.appendChild(tr)
+	
+	charImages.push(img)
+	charInputs.push(charInput)
+}
+
+
 function buildData()
 {
+	let extractScores = document.getElementById("checkboxScores").checked
+	
+	let array = (extractScores ? scoreGlyphs : nameGlyphs)
+	let arrayName = (extractScores ? "scoreGlyphs" : "nameGlyphs")
+	
 	for (let i = 0; i < charImages.length; i++)
 	{
 		if (charInputs[i].value == "")
@@ -82,18 +108,18 @@ function buildData()
 		entry.c = charInputs[i].value
 		entry.data = charImages[i]
 		
-		characters.push(entry)
+		array.push(entry)
 	}
 	
-	characters.sort((a, b) => a.c.charCodeAt(0) - b.c.charCodeAt(0))
+	array.sort((a, b) => a.c.charCodeAt(0) - b.c.charCodeAt(0))
 	
-	let str = "let characters =\n[\n"
-	for (let i = 0; i < characters.length; i++)
+	let str = "let " + arrayName + " =\n[\n"
+	for (let i = 0; i < array.length; i++)
 	{
 		if (i > 0)
 			str += ",\n"
 		
-		let entry = characters[i]
+		let entry = array[i]
 		
 		str += "\t{ c: " + JSON.stringify(entry.c) + ", "
 		str += "data: " + entry.data.toJsonBinarized() + " }"
