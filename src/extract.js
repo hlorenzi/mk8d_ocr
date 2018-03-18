@@ -8,7 +8,9 @@ function setImage(input)
 	charImages = []
 	charInputs = []
 	
-	let extractScores = document.getElementById("checkboxScores").checked
+	let extractNames = document.getElementById("radioNames").checked
+	let extractScores = document.getElementById("radioScores").checked
+	let extractFlags = document.getElementById("radioFlags").checked
 	let withSpaces = document.getElementById("checkboxSpaces").checked
 	
 	ImageData.fromSrc(inputGetImageSrc(input), (img) =>
@@ -20,7 +22,13 @@ function setImage(input)
 		
 		let table = document.createElement("table")
 		
-		if (extractScores)
+		if (extractFlags)
+		{
+			let flags = img.extractFlags()
+			for (let flag of flags)
+				addToTable(table, flag)
+		}
+		else if (extractScores)
 		{
 			let scores = img.extractScores()
 			for (let score of scores)
@@ -94,10 +102,12 @@ function addToTable(table, img)
 
 function buildData()
 {
-	let extractScores = document.getElementById("checkboxScores").checked
+	let extractNames = document.getElementById("radioNames").checked
+	let extractScores = document.getElementById("radioScores").checked
+	let extractFlags = document.getElementById("radioFlags").checked
 	
-	let array = (extractScores ? scoreGlyphs : nameGlyphs)
-	let arrayName = (extractScores ? "scoreGlyphs" : "nameGlyphs")
+	let array = (extractFlags ? flags : (extractScores ? scoreGlyphs : nameGlyphs))
+	let arrayName = (extractFlags ? "flags" : (extractScores ? "scoreGlyphs" : "nameGlyphs"))
 	
 	for (let i = 0; i < charImages.length; i++)
 	{
@@ -122,7 +132,7 @@ function buildData()
 		let entry = array[i]
 		
 		str += "\t{ c: " + JSON.stringify(entry.c) + ", "
-		str += "data: " + entry.data.toJsonBinarized() + " }"
+		str += "data: " + (extractFlags ? entry.data.toJson() : entry.data.toJsonBinarized()) + " }"
 	}
 	
 	str += "\n]"

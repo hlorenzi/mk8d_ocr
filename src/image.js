@@ -112,6 +112,54 @@ class ImageData
 	}
 	
 	
+	toJson()
+	{
+		let str = "ImageData.fromJson("
+		str += this.imageData.width + ", "
+		str += this.imageData.height + ", "
+		str += "["
+		
+		let pixelNum = this.imageData.width * this.imageData.height
+		for (let i = 0; i < pixelNum; i++)
+		{
+			if (i > 0)
+				str += ","
+			
+			str += this.imageData.data[i * 4 + 0] + ","
+			str += this.imageData.data[i * 4 + 1] + ","
+			str += this.imageData.data[i * 4 + 2]
+		}
+		
+		return str + "])"
+	}
+	
+	
+	static fromJson(w, h, data)
+	{
+		let canvas = document.createElement("canvas")
+		canvas.width = w
+		canvas.height = h
+		
+		let ctx = canvas.getContext("2d")
+		ctx.fillStyle = "#ffffff"
+		ctx.fillRect(0, 0, w, h)
+		
+		let image = new ImageData()
+		image.imageData = ctx.getImageData(0, 0, w, h)
+		
+		for (let i = 0; i < w * h; i++)
+		{
+			image.imageData.data[i * 4 + 0] = data[i * 3 + 0]
+			image.imageData.data[i * 4 + 1] = data[i * 3 + 1]
+			image.imageData.data[i * 4 + 2] = data[i * 3 + 2]
+			image.imageData.data[i * 4 + 3] = 255
+		}
+		
+		image.createCache()
+		return image
+	}
+	
+	
 	getBinaryPixel(x, y)
 	{
 		return this.imageData.data[(y * this.imageData.width + x) * 4] != 0
@@ -214,6 +262,16 @@ class ImageData
 			scores[i].createCache()
 		
 		return scores
+	}
+	
+	
+	extractFlags()
+	{
+		let flags = []
+		for (let i = 0; i < 12; i++)
+			flags.push(this.extractRegion(958, 60 + 52 * i, 42, 28))
+		
+		return flags
 	}
 	
 	
@@ -520,6 +578,36 @@ class ImageData
 	}
 	
 	
+	scoreFlag(flag, debug = false)
+	{
+		let result = 0
+		for (let y = 0; y < this.imageData.height; y++)
+		{
+			for (let x = 0; x < this.imageData.width; x++)
+			{
+				let index = (y * this.imageData.width + x) * 4
+				
+				result += ImageData.colorProximity(
+					this.imageData.data[index + 0],
+					this.imageData.data[index + 1],
+					this.imageData.data[index + 2],
+					flag.data.imageData.data[index + 0],
+					flag.data.imageData.data[index + 1],
+					flag.data.imageData.data[index + 2])
+			}
+		}
+		
+		let score = result / (this.imageData.width * this.imageData.height)
+		
+		if (debug)
+			console.log(
+				"\"" + flag.c + "\" " +
+				"score(" + score.toFixed(5).padStart(8) + ")")
+			
+		return score
+	}
+	
+	
 	*recognizePlayerIterable(resultObj)
 	{
 		let str = ""
@@ -625,5 +713,33 @@ class ImageData
 		}
 		
 		resultObj.score = value
+	}
+	
+	
+	*recognizeFlagIterable(resultObj)
+	{
+		console.log("\n\n\n\n")
+		
+		let scores = []
+		for (let flag of flags)
+		{
+			let score = this.scoreFlag(flag, true)
+			if (score == null)
+				continue
+			
+			scores.push({ flag: flag, score: score })
+			yield null
+		}
+		
+		scores.sort((a, b) => b.score - a.score)
+		
+		if (scores.length == 0 || scores[0].score < 0.75)
+		{
+			resultObj.flag = null
+			return
+		}
+		
+		let chosen = scores[0]
+		resultObj.flag = chosen.flag.c
 	}
 }

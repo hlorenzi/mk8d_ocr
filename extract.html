@@ -10,9 +10,11 @@
 	<body>
 		<input type="file" id="inputFile" accept=".jpg, .jpeg, .png" onchange="setImage(this)">
 		<br>
-		<input type="checkbox" id="checkboxScores"></input>Extract Scores
+		<input type="radio" name="extractKind" id="radioNames" checked></input><label for="radioNames">Names</label>
+		<input type="radio" name="extractKind" id="radioScores"></input><label for="radioScores">Scores</label>
+		<input type="radio" name="extractKind" id="radioFlags"></input><label for="radioFlags">Flags</label>
 		<br>
-		<input type="checkbox" id="checkboxSpaces"></input>Glyphs with Spaces
+		<input type="checkbox" id="checkboxSpaces"></input><label for="checkboxSpaces">Join Glyphs Once</label>
 		
 		<div id="divTable"></div>
 		
@@ -22,6 +24,7 @@
 		<script src="src/image.js"></script>
 		<script src="src/nameGlyphs.js"></script>
 		<script src="src/scoreGlyphs.js"></script>
+		<script src="src/flags.js"></script>
 		<script src="src/inputImage.js"></script>
 	</body>
 
