@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+
+<html>
+
+	<head>
+		<title>Mario Kart 8 Deluxe OCR Name Recognizer</title>
+		<meta charset="UTF-8">
+	</head>
+	
+	<body>
+		Choose an image of an <i>in-race</i> results screen, then wait a few seconds:<br>
+		<input type="file" id="inputFile" accept=".jpg, .jpeg, .png" onchange="setImage(this)">
+		<br>
+		
+		<div id="divTable"></div>
+		
+		<script src="src/recognize.js"></script>
+		<script src="src/image.js"></script>
+		<script src="src/characters.js"></script>
+		<script src="src/inputImage.js"></script>
+	</body>
+
+</html>
