@@ -459,14 +459,14 @@ class ImageData
 	}
 	
 	
-	getRegionFilling(xMin, yMin, w, h)
+	getRegionFilling(xMin, yMin, w, h, divide = true)
 	{
 		let result = 0
 		for (let y = 0; y < h; y++)
 			for (let x = 0; x < w; x++)
 				result += this.getBinaryPixel(x + xMin, y + yMin) ? 1 : 0
 				
-		return result / (w * h)
+		return result / (divide ? (w * h) : 1)
 	}
 	
 	
@@ -578,6 +578,38 @@ class ImageData
 	}
 	
 	
+	disambiguateGlyphI(x, w)
+	{
+		let smallISep =
+			this.getRegionFilling(x, 17, w, 1, false) == 0 ||
+			this.getRegionFilling(x, 18, w, 1, false) == 0 ||
+			this.getRegionFilling(x, 19, w, 1, false) == 0
+			
+		let smallDotlessITittle =
+			this.getRegionFilling(x, 12, w, 1, false) == 0 &&
+			this.getRegionFilling(x, 13, w, 1, false) == 0 &&
+			this.getRegionFilling(x, 14, w, 1, false) == 0 &&
+			this.getRegionFilling(x, 15, w, 1, false) == 0
+			
+		let exclamationSep =
+			this.getRegionFilling(x, 27, w, 1, false) == 0 ||
+			this.getRegionFilling(x, 28, w, 1, false) == 0 ||
+			this.getRegionFilling(x, 29, w, 1, false) == 0 ||
+			this.getRegionFilling(x, 30, w, 1, false) == 0
+			
+		if (exclamationSep)
+			return "!"
+			
+		if (smallISep && smallDotlessITittle)
+			return "ı"
+		
+		if (smallISep)
+			return "i"
+		
+		return "l"
+	}
+	
+	
 	scoreFlag(flag, debug = false)
 	{
 		let result = 0
@@ -654,7 +686,11 @@ class ImageData
 			if (chosen.x - x > 6)
 				str += " "
 			
-			str += chosen.glyph.c
+			let c = chosen.glyph.c
+			if (c == "l" || c == "i" || c == "I" || c == "!" || c == "ı")
+				c = this.disambiguateGlyphI(x, chosen.glyph.data.imageData.width)
+			
+			str += c
 			
 			for (let y = 0; y < this.imageData.height; y++)
 			{
@@ -665,6 +701,35 @@ class ImageData
 			x = chosen.x + chosen.glyph.data.imageData.width + 1
 			
 			yield null
+		}
+		
+		let isUppercase = (c) =>
+		{
+			if (c == null)
+				return false
+			
+			c = c.charCodeAt(0)
+			
+			return c >= "A".charCodeAt(0) && c <= "Z".charCodeAt(0)
+		}
+		
+		let replaceChar = (str, index, c) =>
+		{
+			return str.substr(0, index) + c + str.substr(index + c.length)
+		}
+		
+		for (let i = 0; i < str.length; i++)
+		{
+			let c = str[i]
+			if (c != "l" && c != "I")
+				continue
+			
+			let prev = (i > 0 ? str[i - 1] : null)
+			let next = (i < str.length - 1 ? str[i + 1] : null)
+			
+			if ((c == "l" && prev == null) ||
+				(isUppercase(prev) && isUppercase(next)))
+				str = replaceChar(str, i, "I")
 		}
 		
 		resultObj.name = str
@@ -718,12 +783,12 @@ class ImageData
 	
 	*recognizeFlagIterable(resultObj)
 	{
-		console.log("\n\n\n\n")
+		//console.log("\n\n\n\n")
 		
 		let scores = []
 		for (let flag of flags)
 		{
-			let score = this.scoreFlag(flag, true)
+			let score = this.scoreFlag(flag)
 			if (score == null)
 				continue
 			
