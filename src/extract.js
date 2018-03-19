@@ -100,6 +100,23 @@ function addToTable(table, img)
 }
 
 
+function listNameGlyphs()
+{
+	let str = ""
+	let prev = ""
+	for (let glyph of nameGlyphs)
+	{
+		if (glyph.c != prev && glyph.c.length == 1)
+		{
+			str += glyph.c
+			prev = glyph.c
+		}
+	}
+	
+	console.log(str)
+}
+
+
 function buildData()
 {
 	let extractNames = document.getElementById("radioNames").checked

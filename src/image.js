@@ -219,7 +219,7 @@ class ImageData
 	}
 	
 	
-	extractPlayers()
+	extractPlayers(cache = true)
 	{
 		let players = []
 		for (let i = 0; i < 12; i++)
@@ -235,14 +235,15 @@ class ImageData
 				players[i].binarize(255, 255, 255)
 		}
 		
-		for (let i = 0; i < 12; i++)
-			players[i].createCache()
+		if (cache)
+			for (let i = 0; i < 12; i++)
+				players[i].createCache()
 		
 		return players
 	}
 	
 	
-	extractScores()
+	extractScores(cache = true)
 	{
 		let scores = []
 		for (let i = 0; i < 12; i++)
@@ -258,8 +259,9 @@ class ImageData
 				scores[i].binarize(255, 255, 255)
 		}
 		
-		for (let i = 0; i < 12; i++)
-			scores[i].createCache()
+		if (cache)
+			for (let i = 0; i < 12; i++)
+				scores[i].createCache()
 		
 		return scores
 	}
@@ -549,19 +551,23 @@ class ImageData
 			wrongColumns /= glyph.data.imageData.width
 		
 		let score = 0
-		score += 1 / (glyphAvgDist + 1) / (glyphAvgDist + 1)
-		score += 1 / (targetAvgDistTruncated + 1) / (targetAvgDistTruncated + 1)
-		score -= glyphMaxDist * 0.05
-		score -= targetMaxDist * 0.025
-		score += estimatedWidthBonus
-		score *= 1 + glyph.data.imageData.width / 100
-		score -= wrongColumns * 5
-		score += Math.min(15, glyph.data.imageData.width) * 0.05
-		
-		if (!forNames)
+		if (forNames)
 		{
-			score /= (glyphMaxDist + 1) * 0.1
-			score /= (targetMaxDist + 1) * 0.1
+			score += 1 / (glyphAvgDist + 1) / (glyphAvgDist + 1)
+			score += 1 / (targetAvgDistTruncated + 1) / (targetAvgDistTruncated + 1)
+			score -= glyphMaxDist * 0.05
+			score -= targetMaxDist * 0.025
+			score += estimatedWidthBonus
+			score *= 1 + glyph.data.imageData.width / 100
+			score -= wrongColumns * 5
+			score += Math.min(15, glyph.data.imageData.width) * 0.05
+		}
+		else
+		{
+			score = 1
+			score /= (glyphMaxDist + 1)
+			score /= (targetMaxDist + 1)
+			score /= (targetMaxDist + 1)
 		}
 		
 		if (debug)
@@ -666,8 +672,6 @@ class ImageData
 					
 					scores.push({ x: xBegin + skip, glyph: glyph, score: score })
 				}
-				
-				yield null
 			}
 			
 			if (scores.length == 0)
@@ -745,16 +749,19 @@ class ImageData
 			//console.log("\n\n\n\n")
 			
 			let regionFilling = this.getRegionFilling(x, 0, 18, this.imageData.height)
-			if (regionFilling > 0.05)
+			if (regionFilling > 0.01)
 			{
 				let scores = []
-				for (let glyph of scoreGlyphs)
+				for (let disp = 0; disp <= 1; disp++)
 				{
-					let score = this.scoreGlyph(glyph, x, false)
-					if (score == null)
-						continue
-					
-					scores.push({ x: x, glyph: glyph, score: score })
+					for (let glyph of scoreGlyphs)
+					{
+						let score = this.scoreGlyph(glyph, x + disp, false)
+						if (score == null)
+							continue
+						
+						scores.push({ x: x + disp, glyph: glyph, score: score })
+					}
 				}
 				
 				if (scores.length == 0)
@@ -764,6 +771,8 @@ class ImageData
 
 				let chosen = scores[0]
 				value = (value * 10) + (chosen.glyph.c.charCodeAt(0) - "0".charCodeAt(0))
+				
+				//console.log(chosen.glyph.c)
 				
 				for (let y = 0; y < this.imageData.height; y++)
 				{

@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html>
+
+	<head>
+		<title>Mario Kart 8 Deluxe OCR Table Maker</title>
+		<meta charset="UTF-8">
+	</head>
+	
+	<style>
+		body
+		{
+			font-family: Verdana, sans-serif;
+			font-size: 1em;
+		}
+		
+		table, td, tr
+		{
+			margin: 0;
+			border: 0;
+			padding: 0;
+			padding-top: 2px;
+			padding-bottom: 2px;
+			border-collapse: collapse;
+			text-align: center;
+		}
+		
+		.inputClanName
+		{
+			font-family: Verdana, sans-serif;
+			font-size: 1em;
+			width: 2.5em;
+		}
+		
+		.inputClanBonus
+		{
+			font-family: Verdana, sans-serif;
+			font-size: 1em;
+			width: 2.5em;
+		}
+		
+		.inputClanTotal
+		{
+			font-family: Verdana, sans-serif;
+			font-size: 1em;
+			width: 2.5em;
+			opacity: 0.5;
+		}
+		
+		.radioPlayerClan
+		{
+			text-align: center;
+			width: 2.5em;
+		}
+		
+		.inputName
+		{
+			font-family: Verdana, sans-serif;
+			font-size: 1em;
+			width: 12em;
+			opacity: 0.75;
+		}
+		
+		.inputFlag
+		{
+			font-family: Verdana, sans-serif;
+			font-size: 1em;
+			width: 2em;
+			opacity: 0.75;
+		}
+		
+		.inputScore
+		{
+			font-family: Verdana, sans-serif;
+			font-size: 1em;
+			width: 4em;
+			opacity: 0.75;
+		}
+	</style>
+	
+	<body onload="refresh()">
+		<table>
+			<tr>
+				<td>
+					<div id="divData">
+						<table border="0">
+							<tr>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td><input type="color" id="inputClan1Color" class="inputClanColor" value="#ff4444" onchange="refresh()"></input></td>
+								<td><input type="color" id="inputClan2Color" class="inputClanColor" value="#4466ff" onchange="refresh()"></input></td>
+								<td><input type="color" id="inputClan3Color" class="inputClanColor" value="#00cc00" onchange="refresh()"></input></td>
+								<td><input type="color" id="inputClan4Color" class="inputClanColor" value="#ffcc00" onchange="refresh()"></input></td>
+								<td><input type="color" id="inputClan5Color" class="inputClanColor" value="#ff55bb" onchange="refresh()"></input></td>
+								<td><input type="color" id="inputClan6Color" class="inputClanColor" value="#bbbbbb" onchange="refresh()"></input></td>
+							</tr>
+							
+							<tr>
+								<td>Name</td>
+								<td>Country</td>
+								<td>Score</td>
+								
+								<td><input id="inputClan1Name" class="inputClanName"></input></td>
+								<td><input id="inputClan2Name" class="inputClanName"></input></td>
+								<td><input id="inputClan3Name" class="inputClanName"></input></td>
+								<td><input id="inputClan4Name" class="inputClanName"></input></td>
+								<td><input id="inputClan5Name" class="inputClanName"></input></td>
+								<td><input id="inputClan6Name" class="inputClanName"></input></td>
+							</tr>
+							
+							<tr id="trPlayer1">
+								<td><input id="inputPlayer1Name" class="inputName"></input></td>
+								<td><input id="inputPlayer1Flag" class="inputFlag"></input></td>
+								<td><input id="inputPlayer1Score" class="inputScore" onchange="refreshTotals()"></input></td>
+								
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer1Clan" id="radioPlayer1Clan1" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer1Clan" id="radioPlayer1Clan2" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer1Clan" id="radioPlayer1Clan3" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer1Clan" id="radioPlayer1Clan4" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer1Clan" id="radioPlayer1Clan5" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer1Clan" id="radioPlayer1Clan6" onchange="refresh()" checked></input></label></td>
+							</tr>
+							
+							<tr id="trPlayer2">
+								<td><input id="inputPlayer2Name" class="inputName"></input></td>
+								<td><input id="inputPlayer2Flag" class="inputFlag"></input></td>
+								<td><input id="inputPlayer2Score" class="inputScore" onchange="refreshTotals()"></input></td>
+								
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer2Clan" id="radioPlayer2Clan1" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer2Clan" id="radioPlayer2Clan2" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer2Clan" id="radioPlayer2Clan3" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer2Clan" id="radioPlayer2Clan4" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer2Clan" id="radioPlayer2Clan5" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer2Clan" id="radioPlayer2Clan6" onchange="refresh()" checked></input></label></td>
+							</tr>
+							
+							<tr id="trPlayer3">
+								<td><input id="inputPlayer3Name" class="inputName"></input></td>
+								<td><input id="inputPlayer3Flag" class="inputFlag"></input></td>
+								<td><input id="inputPlayer3Score" class="inputScore" onchange="refreshTotals()"></input></td>
+								
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer3Clan" id="radioPlayer3Clan1" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer3Clan" id="radioPlayer3Clan2" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer3Clan" id="radioPlayer3Clan3" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer3Clan" id="radioPlayer3Clan4" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer3Clan" id="radioPlayer3Clan5" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer3Clan" id="radioPlayer3Clan6" onchange="refresh()" checked></input></label></td>
+							</tr>
+							
+							<tr id="trPlayer4">
+								<td><input id="inputPlayer4Name" class="inputName"></input></td>
+								<td><input id="inputPlayer4Flag" class="inputFlag"></input></td>
+								<td><input id="inputPlayer4Score" class="inputScore" onchange="refreshTotals()"></input></td>
+								
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer4Clan" id="radioPlayer4Clan1" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer4Clan" id="radioPlayer4Clan2" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer4Clan" id="radioPlayer4Clan3" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer4Clan" id="radioPlayer4Clan4" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer4Clan" id="radioPlayer4Clan5" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer4Clan" id="radioPlayer4Clan6" onchange="refresh()" checked></input></label></td>
+							</tr>
+							
+							<tr id="trPlayer5">
+								<td><input id="inputPlayer5Name" class="inputName"></input></td>
+								<td><input id="inputPlayer5Flag" class="inputFlag"></input></td>
+								<td><input id="inputPlayer5Score" class="inputScore" onchange="refreshTotals()"></input></td>
+								
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer5Clan" id="radioPlayer5Clan1" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer5Clan" id="radioPlayer5Clan2" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer5Clan" id="radioPlayer5Clan3" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer5Clan" id="radioPlayer5Clan4" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer5Clan" id="radioPlayer5Clan5" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer5Clan" id="radioPlayer5Clan6" onchange="refresh()" checked></input></label></td>
+							</tr>
+							
+							<tr id="trPlayer6">
+								<td><input id="inputPlayer6Name" class="inputName"></input></td>
+								<td><input id="inputPlayer6Flag" class="inputFlag"></input></td>
+								<td><input id="inputPlayer6Score" class="inputScore" onchange="refreshTotals()"></input></td>
+								
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer6Clan" id="radioPlayer6Clan1" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer6Clan" id="radioPlayer6Clan2" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer6Clan" id="radioPlayer6Clan3" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer6Clan" id="radioPlayer6Clan4" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer6Clan" id="radioPlayer6Clan5" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer6Clan" id="radioPlayer6Clan6" onchange="refresh()" checked></input></label></td>
+							</tr>
+							
+							<tr id="trPlayer7">
+								<td><input id="inputPlayer7Name" class="inputName"></input></td>
+								<td><input id="inputPlayer7Flag" class="inputFlag"></input></td>
+								<td><input id="inputPlayer7Score" class="inputScore" onchange="refreshTotals()"></input></td>
+								
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer7Clan" id="radioPlayer7Clan1" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer7Clan" id="radioPlayer7Clan2" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer7Clan" id="radioPlayer7Clan3" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer7Clan" id="radioPlayer7Clan4" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer7Clan" id="radioPlayer7Clan5" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer7Clan" id="radioPlayer7Clan6" onchange="refresh()" checked></input></label></td>
+							</tr>
+							
+							<tr id="trPlayer8">
+								<td><input id="inputPlayer8Name" class="inputName"></input></td>
+								<td><input id="inputPlayer8Flag" class="inputFlag"></input></td>
+								<td><input id="inputPlayer8Score" class="inputScore" onchange="refreshTotals()"></input></td>
+								
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer8Clan" id="radioPlayer8Clan1" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer8Clan" id="radioPlayer8Clan2" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer8Clan" id="radioPlayer8Clan3" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer8Clan" id="radioPlayer8Clan4" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer8Clan" id="radioPlayer8Clan5" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer8Clan" id="radioPlayer8Clan6" onchange="refresh()" checked></input></label></td>
+							</tr>
+							
+							<tr id="trPlayer9">
+								<td><input id="inputPlayer9Name" class="inputName"></input></td>
+								<td><input id="inputPlayer9Flag" class="inputFlag"></input></td>
+								<td><input id="inputPlayer9Score" class="inputScore" onchange="refreshTotals()"></input></td>
+								
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer9Clan" id="radioPlayer9Clan1" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer9Clan" id="radioPlayer9Clan2" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer9Clan" id="radioPlayer9Clan3" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer9Clan" id="radioPlayer9Clan4" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer9Clan" id="radioPlayer9Clan5" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer9Clan" id="radioPlayer9Clan6" onchange="refresh()" checked></input></label></td>
+							</tr>
+							
+							<tr id="trPlayer10">
+								<td><input id="inputPlayer10Name" class="inputName"></input></td>
+								<td><input id="inputPlayer10Flag" class="inputFlag"></input></td>
+								<td><input id="inputPlayer10Score" class="inputScore" onchange="refreshTotals()"></input></td>
+								
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer10Clan" id="radioPlayer10Clan1" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer10Clan" id="radioPlayer10Clan2" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer10Clan" id="radioPlayer10Clan3" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer10Clan" id="radioPlayer10Clan4" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer10Clan" id="radioPlayer10Clan5" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer10Clan" id="radioPlayer10Clan6" onchange="refresh()" checked></input></label></td>
+							</tr>
+							
+							<tr id="trPlayer11">
+								<td><input id="inputPlayer11Name" class="inputName"></input></td>
+								<td><input id="inputPlayer11Flag" class="inputFlag"></input></td>
+								<td><input id="inputPlayer11Score" class="inputScore" onchange="refreshTotals()"></input></td>
+								
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer11Clan" id="radioPlayer11Clan1" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer11Clan" id="radioPlayer11Clan2" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer11Clan" id="radioPlayer11Clan3" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer11Clan" id="radioPlayer11Clan4" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer11Clan" id="radioPlayer11Clan5" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer11Clan" id="radioPlayer11Clan6" onchange="refresh()" checked></input></label></td>
+							</tr>
+							
+							<tr id="trPlayer12">
+								<td><input id="inputPlayer12Name" class="inputName"></input></td>
+								<td><input id="inputPlayer12Flag" class="inputFlag"></input></td>
+								<td><input id="inputPlayer12Score" class="inputScore" onchange="refreshTotals()"></input></td>
+								
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer12Clan" id="radioPlayer12Clan1" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer12Clan" id="radioPlayer12Clan2" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer12Clan" id="radioPlayer12Clan3" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer12Clan" id="radioPlayer12Clan4" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer12Clan" id="radioPlayer12Clan5" onchange="refresh()"></input></label></td>
+								<td><label><input type="radio" class="radioPlayerClan" name="radioPlayer12Clan" id="radioPlayer12Clan6" onchange="refresh()" checked></input></label></td>
+							</tr>
+							
+							<tr>
+								<td></td>
+								<td></td>
+								<td>Bonuses</td>
+								<td><input id="inputClan1Bonus" class="inputClanBonus" onchange="refreshTotals()"></input></td>
+								<td><input id="inputClan2Bonus" class="inputClanBonus" onchange="refreshTotals()"></input></td>
+								<td><input id="inputClan3Bonus" class="inputClanBonus" onchange="refreshTotals()"></input></td>
+								<td><input id="inputClan4Bonus" class="inputClanBonus" onchange="refreshTotals()"></input></td>
+								<td><input id="inputClan5Bonus" class="inputClanBonus" onchange="refreshTotals()"></input></td>
+								<td><input id="inputClan6Bonus" class="inputClanBonus" onchange="refreshTotals()"></input></td>
+							</tr>
+							
+							<tr>
+								<td></td>
+								<td></td>
+								<td>Totals</td>
+								<td><input id="inputClan1Total" class="inputClanTotal" readonly></input></td>
+								<td><input id="inputClan2Total" class="inputClanTotal" readonly></input></td>
+								<td><input id="inputClan3Total" class="inputClanTotal" readonly></input></td>
+								<td><input id="inputClan4Total" class="inputClanTotal" readonly></input></td>
+								<td><input id="inputClan5Total" class="inputClanTotal" readonly></input></td>
+								<td><input id="inputClan6Total" class="inputClanTotal" readonly></input></td>
+							</tr>
+							
+						</table>
+					</div>
+				</td>
+				
+				<td style="padding-left:5em; text-align:left;">
+					<div style="background-color:#cccccc; padding:10px; width:38em;">
+						<span style="font-size:0.75em;">Fill info automatically from an <i>in-race</i> results screenshot:</span>
+						<input type="file" id="inputFile" accept=".jpg, .jpeg, .png" onchange="setImage(this)">
+						<br>
+						
+						<b><div id="divProgress" style="visibility:hidden;">
+							0% Working...
+						</div></b>
+						
+						<br>
+						<canvas id="canvasInput" width="1280" height="720" style="width:38em; display:none;"></canvas>
+					</div>
+				</td>
+			</tr>
+			
+			<tr>
+				<td>
+					<button onclick="generateTable()">Generate Table</button>
+					<br>
+					<canvas id="canvasOutput"></canvas>
+				</td>
+			</tr>
+		</table>
+		
+		<div id="divOutput"></div>
+		
+		<script src="src/table.js"></script>
+		<script src="src/image.js"></script>
+		<script src="src/nameGlyphs.js"></script>
+		<script src="src/scoreGlyphs.js"></script>
+		<script src="src/flags.js"></script>
+		<script src="src/inputImage.js"></script>
+	</body>
+
+</html>
