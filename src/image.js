@@ -74,12 +74,25 @@ class ImageData
 		str += "["
 		
 		let pixelNum = this.imageData.width * this.imageData.height
+		let curState = false
+		let curRunLength = 0
+		let groups = 0
+		
 		for (let i = 0; i < pixelNum; i++)
 		{
-			if (i > 0)
-				str += ","
+			if (this.imageData.data[i * 4 + 0] != (curState ? 255 : 0))
+			{
+				if (groups > 0)
+					str += ","
+				
+				str += curRunLength.toString()
+				
+				curState = !curState
+				curRunLength = 0
+				groups += 1
+			}
 			
-			str += (this.imageData.data[i * 4 + 0] != 0) ? "1" : "0"
+			curRunLength += 1
 		}
 		
 		return str + "])"
@@ -99,12 +112,33 @@ class ImageData
 		let image = new ImageData()
 		image.imageData = ctx.getImageData(0, 0, w, h)
 		
-		for (let i = 0; i < w * h; i++)
+		let curState = 0
+		let curPixel = 0
+		for (let runLength of data)
 		{
-			image.imageData.data[i * 4 + 0] = data[i] * 255
-			image.imageData.data[i * 4 + 1] = data[i] * 255
-			image.imageData.data[i * 4 + 2] = data[i] * 255
-			image.imageData.data[i * 4 + 3] = 255
+			for (let i = 0; i < runLength; i++)
+			{
+				let addr = curPixel * 4
+				image.imageData.data[addr + 0] = curState
+				image.imageData.data[addr + 1] = curState
+				image.imageData.data[addr + 2] = curState
+				image.imageData.data[addr + 3] = 255
+				
+				curPixel += 1
+			}
+			
+			curState = (curState == 0 ? 255 : 0)
+		}
+		
+		while (curPixel < w * h)
+		{
+			let addr = curPixel * 4
+			image.imageData.data[addr + 0] = curState
+			image.imageData.data[addr + 1] = curState
+			image.imageData.data[addr + 2] = curState
+			image.imageData.data[addr + 3] = 255
+			
+			curPixel += 1
 		}
 		
 		image.createCache()

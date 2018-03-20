@@ -339,6 +339,9 @@ function drawTable(data)
 	{
 		let clan = data.clans[i]
 		
+		if (clan.players.length == 0)
+			continue
+		
 		ctx.save()
 		ctx.translate(marginW, marginH + clanY)
 		
