@@ -253,20 +253,73 @@ class ImageData
 	}
 	
 	
+	letterbox(xTop, yTop, w, h)
+	{
+		let canvas = document.createElement("canvas")
+		canvas.width = w
+		canvas.height = h
+		
+		let ctx = canvas.getContext("2d")
+		ctx.fillStyle = "black"
+		ctx.fillRect(0, 0, w, h)
+		ctx.putImageData(this.imageData, xTop, yTop)
+		
+		let image = new ImageData()
+		image.imageData = ctx.getImageData(0, 0, w, h)
+		
+		return image
+	}
+	
+	
+	detectTrophyScreen()
+	{
+		let region = this.extractRegion(0, 0, 250, 20)
+		let isRed = region.wholeImageProximity(220, 0, 0)
+		console.log(isRed)
+		
+		return isRed > 0.9
+	}
+	
+	
 	extractPlayers(cache = true)
 	{
 		let players = []
-		for (let i = 0; i < 12; i++)
-			players.push(this.extractRegion(680, 52 + 52 * i, 275, 43))
 		
-		for (let i = 0; i < 12; i++)
+		if (this.detectTrophyScreen())
 		{
-			let isYellow = players[i].wholeImageProximity(241, 220, 15)
+			for (let i = 0; i < 12; i++)
+				players.push(this.extractRegion(150, 133 + 42 * i, 275, 34))
 			
-			if (isYellow > 0.7)
-				players[i].binarize(77, 85, 64)
-			else
-				players[i].binarize(255, 255, 255)
+			for (let i = 0; i < 12; i++)
+				players[i] = players[i].stretchTo(250, 31)
+			
+			for (let i = 0; i < 12; i++)
+			{
+				let isYellow = players[i].wholeImageProximity(241, 220, 15)
+				
+				if (isYellow > 0.7)
+					players[i].binarize(77, 85, 64, 0.7)
+				else
+					players[i].binarize(202, 195, 187, 0.85)
+			}
+			
+			for (let i = 0; i < 12; i++)
+				players[i] = players[i].letterbox(0, 7, 275, 43)
+		}
+		else
+		{
+			for (let i = 0; i < 12; i++)
+				players.push(this.extractRegion(680, 52 + 52 * i, 275, 43))
+			
+			for (let i = 0; i < 12; i++)
+			{
+				let isYellow = players[i].wholeImageProximity(241, 220, 15)
+				
+				if (isYellow > 0.7)
+					players[i].binarize(77, 85, 64, 0.7)
+				else
+					players[i].binarize(255, 255, 255, 0.7)
+			}
 		}
 		
 		if (cache)
@@ -288,9 +341,9 @@ class ImageData
 			let isYellow = scores[i].wholeImageProximity(241, 220, 15)
 			
 			if (isYellow > 0.7)
-				scores[i].binarize(77, 85, 64)
+				scores[i].binarize(77, 85, 64, 0.7)
 			else
-				scores[i].binarize(255, 255, 255)
+				scores[i].binarize(255, 255, 255, 0.7)
 		}
 		
 		if (cache)
@@ -337,7 +390,7 @@ class ImageData
 	}
 	
 	
-	binarize(r, g, b)
+	binarize(r, g, b, threshold)
 	{
 		for (let i = 0; i < this.imageData.width * this.imageData.height; i++)
 		{
@@ -347,7 +400,7 @@ class ImageData
 				this.imageData.data[i * 4 + 1],
 				this.imageData.data[i * 4 + 2])
 			
-			let binary = factor > 0.7 ? 255 : 0
+			let binary = factor > threshold ? 255 : 0
 			
 			this.imageData.data[i * 4 + 0] = binary
 			this.imageData.data[i * 4 + 1] = binary
@@ -595,6 +648,12 @@ class ImageData
 			score *= 1 + glyph.data.imageData.width / 100
 			score -= wrongColumns * 5
 			score += Math.min(15, glyph.data.imageData.width) * 0.05
+			
+			/*score = glyph.data.imageData.width
+			score /= (glyphMaxDist + 1)
+			score /= (glyphMaxDist + 1)
+			score /= (targetMaxDist + 1)
+			score /= (targetMaxDist + 1)*/
 		}
 		else
 		{
@@ -729,6 +788,15 @@ class ImageData
 				c = this.disambiguateGlyphI(x, chosen.glyph.data.imageData.width)
 			
 			str += c
+			
+			/*for (let x = 0; x < this.imageData.width; x++)
+			{
+				if (!this.getBinaryPixel(x, 13))
+					this.setPixel(x, 13, 255, 0, 0)
+				
+				if (!this.getBinaryPixel(x, 31))
+					this.setPixel(x, 31, 255, 0, 0)
+			}*/
 			
 			for (let y = 0; y < this.imageData.height; y++)
 			{

@@ -18,7 +18,7 @@ function setImage(input)
 		{
 			//if (p != 0) continue
 			
-			let result = { }
+			let result = { name: "", flag: "", score: 0 }
 			let player = players[p]
 			let score = scores[p]
 			let flag = flags[p]

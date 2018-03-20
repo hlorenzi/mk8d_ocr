@@ -7,6 +7,11 @@ function setImage(input)
 	
 	ImageData.fromSrc(inputGetImageSrc(input), (img) =>
 	{
+		let canvas = document.getElementById("canvasInput")
+		let ctx = canvas.getContext("2d")
+		ctx.drawImage(img.makeCanvas(), 0, 0, 1280, 720)
+		canvas.style.display = "block"
+		
 		workIterator = extractFromImage(img)
 		window.requestAnimationFrame(doWork)
 	})
@@ -69,12 +74,6 @@ function doWork()
 			
 			document.getElementById("radioPlayer" + (i + 1) + "Clan" + (clanIndex + 1)).checked = true
 		}
-		
-		let img = next.value.img
-		let canvas = document.getElementById("canvasInput")
-		let ctx = canvas.getContext("2d")
-		ctx.drawImage(img.makeCanvas(), 0, 0, 1280, 720)
-		canvas.style.display = "block"
 		
 		refresh()
 		generateTable()
