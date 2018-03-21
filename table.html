@@ -293,15 +293,13 @@
 					</div>
 				</td>
 				
-				<td style="padding-left:5em; text-align:left;">
+				<td style="padding-left:1em; text-align:left;">
 					<div style="background-color:#cccccc; padding:10px; width:38em;">
-						<span style="font-size:0.75em;">Fill info automatically from an <i>in-race</i> results screenshot:</span>
+						<span style="font-size:0.75em;">Fill in automatically from an in-race or trophy results screenshot:</span>
 						<input type="file" id="inputFile" accept=".jpg, .jpeg, .png" onchange="setImage(this)">
 						<br>
 						
-						<b><div id="divProgress" style="visibility:hidden;">
-							0% Working...
-						</div></b>
+						<b><div id="divProgress"></div></b>
 						
 						<br>
 						<canvas id="canvasInput" width="1280" height="720" style="width:38em; display:none;"></canvas>

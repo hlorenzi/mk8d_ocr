@@ -13,7 +13,7 @@ function setImage(input)
 	let extractFlags = document.getElementById("radioFlags").checked
 	let withSpaces = document.getElementById("checkboxSpaces").checked
 	
-	ImageData.fromSrc(inputGetImageSrc(input), (img) =>
+	ImageHelper.fromSrc(inputGetImageSrc(input), (img) =>
 	{
 		img = img.stretchTo(1280, 720)
 		
@@ -123,8 +123,8 @@ function buildData()
 	let extractScores = document.getElementById("radioScores").checked
 	let extractFlags = document.getElementById("radioFlags").checked
 	
-	let array = (extractFlags ? flags : (extractScores ? scoreGlyphs : nameGlyphs))
-	let arrayName = (extractFlags ? "flags" : (extractScores ? "scoreGlyphs" : "nameGlyphs"))
+	let array = (extractFlags ? flagData : (extractScores ? scoreGlyphs : nameGlyphs))
+	let arrayName = (extractFlags ? "flagData" : (extractScores ? "scoreGlyphs" : "nameGlyphs"))
 	
 	for (let i = 0; i < charImages.length; i++)
 	{
@@ -148,7 +148,9 @@ function buildData()
 		
 		let entry = array[i]
 		
-		str += "\t{ c: " + JSON.stringify(entry.c) + ", "
+		str += "\t{ "
+		if (entry.skip) str += "skip: true, "
+		str += "c: " + JSON.stringify(entry.c) + ", "
 		str += "data: " + (extractFlags ? entry.data.toJson() : entry.data.toJsonBinarized()) + " }"
 	}
 	

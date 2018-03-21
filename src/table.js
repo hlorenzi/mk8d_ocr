@@ -1,83 +1,141 @@
-let workIterator = null
+let working = false
 
 
 function setImage(input)
 {
 	let div = document.getElementById("divTable")
 	
-	ImageData.fromSrc(inputGetImageSrc(input), (img) =>
+	let workers = []
+	for (let i = 0; i < 6; i++)
 	{
-		let canvas = document.getElementById("canvasInput")
-		let ctx = canvas.getContext("2d")
-		ctx.drawImage(img.makeCanvas(), 0, 0, 1280, 720)
-		canvas.style.display = "block"
-		
-		workIterator = extractFromImage(img)
-		window.requestAnimationFrame(doWork)
-	})
+		let worker = new Worker("src/worker_name.js")
+		worker.onmessage = (ev) => addResult(ev.data)
+		workers.push(worker)
+	}
+	
+	working = true
+	window.requestAnimationFrame(animateWorking)
+	
+	clearTable()
+	ImageHelper.fromSrc(inputGetImageSrc(input), (img) => recognizeImage(workers, div, img))
 }
 
 
+function clearTable()
+{
+	for (let i = 0; i < 12; i++)
+	{
+		document.getElementById("inputPlayer" + (i + 1) + "Name").value = ""
+		document.getElementById("inputPlayer" + (i + 1) + "Flag").value = ""
+		document.getElementById("inputPlayer" + (i + 1) + "Score").value = ""
+		document.getElementById("radioPlayer" + (i + 1) + "Clan6").checked = true
+	}
+	
+	for (let i = 0; i < 6; i++)
+		document.getElementById("inputClan" + (i + 1) + "Name").value = ""
+	
+	for (let i = 0; i < 6; i++)
+		document.getElementById("inputClan" + (i + 1) + "Bonus").value = ""
+	
+	refresh()
+	generateTable()
+}
+
 let progressStep = 0
-function setProgress(fraction)
+function setProgress(visible)
 {
 	let div = document.getElementById("divProgress")
 	
-	if (fraction == null)
+	if (!visible)
 		div.style.visibility = "hidden"
 	else
 	{
 		div.style.visibility = "visible"
-		div.innerHTML = (fraction * 100).toFixed(0) + "% Working" + ".".repeat(progressStep)
+		div.innerHTML = "Working" + ".".repeat(progressStep)
 		
-		progressStep = (progressStep + 1) % 5
+		progressStep = (progressStep + 0.2) % 6
 	}
 }
 
 
-function doWork()
+function animateWorking()
 {
-	let next = workIterator.next()
-	if (typeof(next.value) == "number")
+	if (working)
 	{
-		setProgress(next.value)
-		window.requestAnimationFrame(doWork)
+		setProgress(true)
+		window.requestAnimationFrame(animateWorking)
 	}
 	else
+		setProgress(false)
+}
+
+
+function recognizeImage(workers, table, img)
+{
+	img = img.stretchTo(1280, 720)
+	
+	let canvas = document.getElementById("canvasInput")
+	let ctx = canvas.getContext("2d")
+	ctx.drawImage(img.makeCanvas(), 0, 0, 1280, 720)
+	canvas.style.display = "block"
+	
+	let doneNum = 0
+	
+	for (let worker of workers)
 	{
-		setProgress(null)
-		workIterator = null
-		
-		let data = next.value.data
-		for (let i = 0; i < data.length; i++)
+		worker.onmessage = (ev) =>
 		{
-			document.getElementById("inputPlayer" + (i + 1) + "Name").value = data[i].name
-			document.getElementById("inputPlayer" + (i + 1) + "Flag").value = data[i].flag
-			document.getElementById("inputPlayer" + (i + 1) + "Score").value = data[i].score
-		}
-		
-		for (let i = 0; i < 6; i++)
-			document.getElementById("inputClan" + (i + 1) + "Name").value = ""
-		
-		for (let i = 0; i < 6; i++)
-			document.getElementById("inputClan" + (i + 1) + "Bonus").value = ""
-		
-		let clans = extractClans(data)
-		for (let i = 0; i < clans.length; i++)
-			document.getElementById("inputClan" + (i + 1) + "Name").value = clans[i]
-		
-		for (let i = 0; i < data.length; i++)
-		{
-			let clanIndex = clans.findIndex(c => data[i].name.startsWith(c))
-			if (clanIndex < 0)
-				clanIndex = 5
+			let index = ev.data.userdata.index
 			
-			document.getElementById("radioPlayer" + (i + 1) + "Clan" + (clanIndex + 1)).checked = true
+			doneNum += 1
+			switch (ev.data.kind)
+			{
+				case "name":  document.getElementById("inputPlayer" + (index + 1) + "Name").value  = ev.data.name; break
+				case "score": document.getElementById("inputPlayer" + (index + 1) + "Score").value = ev.data.score.toString(); break
+				case "flag":  document.getElementById("inputPlayer" + (index + 1) + "Flag").value  = ev.data.flag; break
+			}
+			
+			if (doneNum == 12 * 3)
+			{
+				recognizeImageFinalize()
+				working = false
+			}
 		}
-		
-		refresh()
-		generateTable()
 	}
+	
+	let players = img.extractPlayers(false)
+	let flags = img.extractFlags(false)
+	let scores = img.extractScores(false)
+	for (let p = 0; p < players.length; p++)
+	{
+		workers[p % workers.length].postMessage({ kind: "name",  img: players[p], nameGlyphs: nameGlyphs,   userdata: { index: p } })
+		workers[p % workers.length].postMessage({ kind: "score", img: scores[p],  scoreGlyphs: scoreGlyphs, userdata: { index: p } })
+		workers[p % workers.length].postMessage({ kind: "flag",  img: flags[p],   flagData: flagData,       userdata: { index: p } })
+	}
+}
+
+
+function recognizeImageFinalize()
+{
+	let names = []
+	for (let i = 0; i < 12; i++)
+		names.push(document.getElementById("inputPlayer" + (i + 1) + "Name").value)
+	
+	let clans = extractClans(names)
+	for (let i = 0; i < clans.length; i++)
+		document.getElementById("inputClan" + (i + 1) + "Name").value = clans[i]
+	
+	for (let i = 0; i < names.length; i++)
+	{
+		let clanIndex = clans.findIndex(c => names[i].startsWith(c))
+		if (clanIndex < 0)
+			clanIndex = 5
+		
+		document.getElementById("radioPlayer" + (i + 1) + "Clan" + (clanIndex + 1)).checked = true
+	}
+	
+	refresh()
+	generateTable()
 }
 
 
@@ -193,7 +251,7 @@ function extractClans(players)
 			if (p == q)
 				continue
 			
-			let suffix = commonSuffix(players[p].name, players[q].name).trim()
+			let suffix = commonSuffix(players[p], players[q]).trim()
 			
 			if (suffix.length > 0 && clans.findIndex(c => c == suffix) < 0)
 				clans.push(suffix)

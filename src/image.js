@@ -1,4 +1,4 @@
-class ImageData
+class ImageHelper
 {
 	constructor()
 	{
@@ -13,7 +13,7 @@ class ImageData
 	
 	static fromSrc(src, onload)
 	{
-		let image = new ImageData()
+		let image = new ImageHelper()
 		image.imageData = null
 		
 		let img = document.createElement("img")
@@ -47,7 +47,7 @@ class ImageData
 		let ctx = canvas.getContext("2d")
 		ctx.drawImage(img, 0, 0, img.width, img.height)
 		
-		let image = new ImageData()
+		let image = new ImageHelper()
 		image.imageData = ctx.getImageData(0, 0, img.width, img.height)
 		
 		return image
@@ -59,7 +59,7 @@ class ImageData
 		let ctx = canvas.getContext("2d")
 		ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height)
 		
-		let image = new ImageData()
+		let image = new ImageHelper()
 		image.imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
 		
 		return image
@@ -68,7 +68,7 @@ class ImageData
 	
 	toJsonBinarized()
 	{
-		let str = "ImageData.fromJsonBinarized("
+		let str = "ImageHelper.fromJsonBinarized("
 		str += this.imageData.width + ", "
 		str += this.imageData.height + ", "
 		str += "["
@@ -101,17 +101,7 @@ class ImageData
 	
 	static fromJsonBinarized(w, h, data)
 	{
-		let canvas = document.createElement("canvas")
-		canvas.width = w
-		canvas.height = h
-		
-		let ctx = canvas.getContext("2d")
-		ctx.fillStyle = "#ffffff"
-		ctx.fillRect(0, 0, w, h)
-		
-		let image = new ImageData()
-		image.imageData = ctx.getImageData(0, 0, w, h)
-		
+		let array = new Uint8ClampedArray(w * h * 4)
 		let curState = 0
 		let curPixel = 0
 		for (let runLength of data)
@@ -119,10 +109,10 @@ class ImageData
 			for (let i = 0; i < runLength; i++)
 			{
 				let addr = curPixel * 4
-				image.imageData.data[addr + 0] = curState
-				image.imageData.data[addr + 1] = curState
-				image.imageData.data[addr + 2] = curState
-				image.imageData.data[addr + 3] = 255
+				array[addr + 0] = curState
+				array[addr + 1] = curState
+				array[addr + 2] = curState
+				array[addr + 3] = 255
 				
 				curPixel += 1
 			}
@@ -133,13 +123,16 @@ class ImageData
 		while (curPixel < w * h)
 		{
 			let addr = curPixel * 4
-			image.imageData.data[addr + 0] = curState
-			image.imageData.data[addr + 1] = curState
-			image.imageData.data[addr + 2] = curState
-			image.imageData.data[addr + 3] = 255
+			array[addr + 0] = curState
+			array[addr + 1] = curState
+			array[addr + 2] = curState
+			array[addr + 3] = 255
 			
 			curPixel += 1
 		}
+		
+		let image = new ImageHelper()
+		image.imageData = new ImageData(array, w, h)
 		
 		image.createCache()
 		return image
@@ -148,7 +141,7 @@ class ImageData
 	
 	toJson()
 	{
-		let str = "ImageData.fromJson("
+		let str = "ImageHelper.fromJson("
 		str += this.imageData.width + ", "
 		str += this.imageData.height + ", "
 		str += "["
@@ -170,26 +163,34 @@ class ImageData
 	
 	static fromJson(w, h, data)
 	{
-		let canvas = document.createElement("canvas")
-		canvas.width = w
-		canvas.height = h
-		
-		let ctx = canvas.getContext("2d")
-		ctx.fillStyle = "#ffffff"
-		ctx.fillRect(0, 0, w, h)
-		
-		let image = new ImageData()
-		image.imageData = ctx.getImageData(0, 0, w, h)
+		let array = new Uint8ClampedArray(w * h * 4)
 		
 		for (let i = 0; i < w * h; i++)
 		{
-			image.imageData.data[i * 4 + 0] = data[i * 3 + 0]
-			image.imageData.data[i * 4 + 1] = data[i * 3 + 1]
-			image.imageData.data[i * 4 + 2] = data[i * 3 + 2]
-			image.imageData.data[i * 4 + 3] = 255
+			array[i * 4 + 0] = data[i * 3 + 0]
+			array[i * 4 + 1] = data[i * 3 + 1]
+			array[i * 4 + 2] = data[i * 3 + 2]
+			array[i * 4 + 3] = 255
 		}
 		
+		let image = new ImageHelper()
+		image.imageData = new ImageData(array, w, h)
+		
 		image.createCache()
+		return image
+	}
+	
+	
+	clone()
+	{
+		let array = new Uint8ClampedArray(this.imageData.width * this.imageData.height * 4)
+		
+		for (let i = 0; i < this.imageData.width * this.imageData.height * 4; i++)
+			array[i] = this.imageData.data[i]
+		
+		let image = new ImageHelper()
+		image.imageData = new ImageData(array, this.imageData.width, this.imageData.height)
+		
 		return image
 	}
 	
@@ -220,7 +221,7 @@ class ImageData
 		let ctx = canvasAfter.getContext("2d")
 		ctx.drawImage(canvasBefore, 0, 0, w, h)
 		
-		return ImageData.fromCanvas(canvasAfter)
+		return ImageHelper.fromCanvas(canvasAfter)
 	}
 	
 	
@@ -246,7 +247,7 @@ class ImageData
 		let ctx = canvas.getContext("2d")
 		ctx.putImageData(this.imageData, -x, -y)
 		
-		let image = new ImageData()
+		let image = new ImageHelper()
 		image.imageData = ctx.getImageData(0, 0, w, h)
 		
 		return image
@@ -264,7 +265,7 @@ class ImageData
 		ctx.fillRect(0, 0, w, h)
 		ctx.putImageData(this.imageData, xTop, yTop)
 		
-		let image = new ImageData()
+		let image = new ImageHelper()
 		image.imageData = ctx.getImageData(0, 0, w, h)
 		
 		return image
@@ -275,7 +276,6 @@ class ImageData
 	{
 		let region = this.extractRegion(0, 0, 250, 20)
 		let isRed = region.wholeImageProximity(220, 0, 0)
-		console.log(isRed)
 		
 		return isRed > 0.9
 	}
@@ -316,7 +316,7 @@ class ImageData
 				let isYellow = players[i].wholeImageProximity(241, 220, 15)
 				
 				if (isYellow > 0.7)
-					players[i].binarize(77, 85, 64, 0.7)
+					players[i].binarize(77, 85, 64, 0.8)
 				else
 					players[i].binarize(255, 255, 255, 0.7)
 			}
@@ -333,17 +333,42 @@ class ImageData
 	extractScores(cache = true)
 	{
 		let scores = []
-		for (let i = 0; i < 12; i++)
-			scores.push(this.extractRegion(1126, 52 + 52 * i, 92, 43))
 		
-		for (let i = 0; i < 12; i++)
+		if (this.detectTrophyScreen())
 		{
-			let isYellow = scores[i].wholeImageProximity(241, 220, 15)
+			for (let i = 0; i < 12; i++)
+				scores.push(this.extractRegion(501, 133 + 42 * i, 86, 34))
 			
-			if (isYellow > 0.7)
-				scores[i].binarize(77, 85, 64, 0.7)
-			else
-				scores[i].binarize(255, 255, 255, 0.7)
+			for (let i = 0; i < 12; i++)
+				scores[i] = scores[i].stretchTo(71, 28)
+			
+			for (let i = 0; i < 12; i++)
+			{
+				let isYellow = scores[i].wholeImageProximity(241, 220, 15)
+				
+				if (isYellow > 0.7)
+					scores[i].binarize(77, 85, 64, 0.7)
+				else
+					scores[i].binarize(202, 195, 187, 0.85)
+			}
+			
+			for (let i = 0; i < 12; i++)
+				scores[i] = scores[i].letterbox(21, 10, 92, 43)
+		}
+		else
+		{
+			for (let i = 0; i < 12; i++)
+				scores.push(this.extractRegion(1126, 52 + 52 * i, 92, 43))
+			
+			for (let i = 0; i < 12; i++)
+			{
+				let isYellow = scores[i].wholeImageProximity(241, 220, 15)
+				
+				if (isYellow > 0.7)
+					scores[i].binarize(77, 85, 64, 0.7)
+				else
+					scores[i].binarize(255, 255, 255, 0.7)
+			}
 		}
 		
 		if (cache)
@@ -357,8 +382,17 @@ class ImageData
 	extractFlags()
 	{
 		let flags = []
-		for (let i = 0; i < 12; i++)
-			flags.push(this.extractRegion(958, 60 + 52 * i, 42, 28))
+		
+		if (this.detectTrophyScreen())
+		{
+			for (let i = 0; i < 12; i++)
+				flags.push(ImageHelper.fromJsonBinarized(42, 28, []))
+		}
+		else
+		{
+			for (let i = 0; i < 12; i++)
+				flags.push(this.extractRegion(958, 60 + 52 * i, 42, 28))
+		}
 		
 		return flags
 	}
@@ -379,7 +413,7 @@ class ImageData
 		let result = 0
 		for (let i = 0; i < this.imageData.width * this.imageData.height; i++)
 		{
-			result += ImageData.colorProximity(
+			result += ImageHelper.colorProximity(
 				r, g, b,
 				this.imageData.data[i * 4 + 0],
 				this.imageData.data[i * 4 + 1],
@@ -394,7 +428,7 @@ class ImageData
 	{
 		for (let i = 0; i < this.imageData.width * this.imageData.height; i++)
 		{
-			let factor = ImageData.colorProximity(
+			let factor = ImageHelper.colorProximity(
 				r, g, b,
 				this.imageData.data[i * 4 + 0],
 				this.imageData.data[i * 4 + 1],
@@ -483,7 +517,7 @@ class ImageData
 			return this.getBinaryPixel(x, y)
 		}
 		
-		for (let layer = 0; layer <= 20; layer++)
+		for (let layer = 0; layer <= 4; layer++)
 		{
 			for (let step = 0; step <= layer; step++)
 			{
@@ -496,12 +530,12 @@ class ImageData
 					testPixel(x - step, y + layer) ||
 					testPixel(x + step, y + layer))
 				{
-					return layer * layer + (layer > 0 ? step / layer : 0)
+					return layer + (layer > 0 ? step / layer : 0)
 				}
 			}
 		}
 		
-		return 10000
+		return 100
 	}
 	
 	
@@ -561,7 +595,7 @@ class ImageData
 	
 	scoreGlyph(glyph, xPen, forNames = true, debug = false)
 	{
-		let glyphMaxDist = 0
+		/*let glyphMaxDist = 0
 		let glyphAvgDist = 0
 		let glyphAvgDistCount = 0
 		
@@ -572,7 +606,8 @@ class ImageData
 				if (!glyph.data.getBinaryPixel(x, y))
 					continue
 				
-				let dist = this.cacheNearestBinaryPixel[y][xPen + x] //this.getNearestBinaryPixel(xPen + x, y, xPen, 0, this.imageData.width, this.imageData.height)
+				let dist = this.getNearestBinaryPixel(xPen + x, y, xPen, 0, this.imageData.width, this.imageData.height)
+				//this.cacheNearestBinaryPixel[y][xPen + x] //
 				
 				glyphMaxDist = Math.max(glyphMaxDist, dist)
 				glyphAvgDist += dist
@@ -609,12 +644,15 @@ class ImageData
 		if (targetAvgDistCount > 0)
 			targetAvgDist /= targetAvgDistCount
 		
+		let truncateHalfNum = 4
+		
 		targetDists.sort()
 		let targetAvgDistTruncated = 0
-		for (let i = 10; i < targetDists.length - 10; i++)
-			targetAvgDistTruncated += targetDists[i] / (targetDists.length - 20)
+		for (let i = truncateHalfNum; i < targetDists.length - truncateHalfNum; i++)
+			targetAvgDistTruncated += targetDists[i] / (targetDists.length - truncateHalfNum * 2)*/
 		
-		let nextColumn = this.cacheNextFilledColumn[xPen + glyph.data.imageData.width - 2] //this.findNextBinaryColumn(xPen + glyph.data.imageData.width - 2, false)
+		let nextColumn = this.cacheNextFilledColumn[xPen + 2] //this.findNextBinaryColumn(xPen + glyph.data.imageData.width - 2, false)
+		let nextEmptyColumn = this.cacheNextEmptyColumn[xPen + glyph.data.imageData.width] //this.findNextBinaryColumn(xPen + glyph.data.imageData.width - 2, false)
 		let endColumn = this.cacheNextFilledColumn[xPen + glyph.data.imageData.width + 4] //this.findNextBinaryColumn(xPen + glyph.data.imageData.width + 4, true)
 		let prevColumn = this.cachePrevFilledColumn[xPen + glyph.data.imageData.width + 1] //this.findPreviousBinaryColumn(xPen + glyph.data.imageData.width + 1, true)
 		
@@ -624,9 +662,11 @@ class ImageData
 		if (forNames && (nextColumn - xPen < 2 || (endColumn == null && prevColumn - xPen < 2)))
 			return null
 		
-		let estimatedWidthBonus = nextColumn - xPen
-		estimatedWidthBonus = Math.abs(estimatedWidthBonus - glyph.data.imageData.width)
-		estimatedWidthBonus = (estimatedWidthBonus < 3 ? 2 : 0)
+		if (forNames && (nextEmptyColumn == null || nextEmptyColumn - xPen > 80))
+			return null
+		
+		let estimatedWidthDiff = Math.abs((nextEmptyColumn - xPen) - glyph.data.imageData.width)
+		let estimatedWidthBonus = 1 / (estimatedWidthDiff + 1)
 		
 		let wrongColumns = 0
 		for (let x = xPen; x < xPen + glyph.data.imageData.width; x++)
@@ -637,33 +677,103 @@ class ImageData
 		else
 			wrongColumns /= glyph.data.imageData.width
 		
+		let nonMatchingPixels = 0
+		let glyphDistanceSum = 0
+		let glyphDistanceMax = 0
+		let glyphPixelNum = 0
+		let targetDistanceSum = 0
+		let targetDistanceNum = 0
+		let targetDistanceMax = 0
+		let targetPixelNum = 0
+		for (let y = 0; y < this.imageData.height; y++)
+		{
+			for (let x = 0; x < glyph.data.imageData.width; x++)
+			{
+				if (glyph.data.cacheNearestBinaryPixel[y][x] == 0)
+				{
+					glyphPixelNum += 1
+					
+					let distance = this.cacheNearestBinaryPixel[y][x + xPen]
+					glyphDistanceSum += distance
+					glyphDistanceMax = Math.max(glyphDistanceMax, distance)
+				}
+				
+				if (this.cacheNearestBinaryPixel[y][x + xPen] == 0)
+				{
+					targetPixelNum += 1
+					
+					let distance = glyph.data.cacheNearestBinaryPixel[y][x]
+					targetDistanceSum += distance
+					targetDistanceNum += 1
+					targetDistanceMax = Math.max(targetDistanceMax, distance)
+				}
+					
+				if ((this.cacheNearestBinaryPixel[y][x + xPen] <= 1) ^ (glyph.data.cacheNearestBinaryPixel[y][x] <= 1))
+					nonMatchingPixels += 1
+			}
+		}
+		
 		let score = 0
 		if (forNames)
 		{
-			score += 1 / (glyphAvgDist + 1) / (glyphAvgDist + 1)
-			score += 1 / (targetAvgDistTruncated + 1) / (targetAvgDistTruncated + 1)
-			score -= glyphMaxDist * 0.05
-			score -= targetMaxDist * 0.025
+			let scoreParts =
+			[
+				-Math.pow(glyphDistanceMax <= 1 ? 0 : glyphDistanceMax, 1.5) * 5,
+				-glyphDistanceSum / (glyphPixelNum * 0.1),
+				-glyphDistanceSum * 0.05,
+				-Math.pow(targetDistanceMax <= 1 ? 0 : targetDistanceMax, 1.5) * 10,
+				-(targetDistanceSum / targetDistanceNum) * 25,
+				-targetDistanceSum * 0.1,
+				-nonMatchingPixels * 0.05,
+				+(glyph.data.imageData.width < 8 ? -5 + (glyph.data.imageData.width * 0.5) : 20 + (glyph.data.imageData.width - 8) * 0.5),
+				+estimatedWidthBonus * 19,
+				(glyph.data.imageData.width < 8 && estimatedWidthBonus < 0.5) ? -10 : 0,
+				(glyph.data.imageData.width < 8 && estimatedWidthBonus > 0.5) ? 10 : 0,
+				glyphPixelNum * 0.075,
+			]
+			
+			scoreParts.forEach(s => score += s)
+			
+			
+			/*score += 1 / (glyphAvgDist + 1) / (glyphAvgDist + 1)
+			score += 1 / (targetAvgDistTruncated + 1) / (targetAvgDistTruncated + 1) / (targetAvgDistTruncated + 1)
+			score -= Math.pow(2, glyphMaxDist) * 0.205
+			score -= Math.pow(3, targetMaxDist) * 0.2025
 			score += estimatedWidthBonus
-			score *= 1 + glyph.data.imageData.width / 100
+			//score *= 1 + glyph.data.imageData.width / 100
 			score -= wrongColumns * 5
-			score += Math.min(15, glyph.data.imageData.width) * 0.05
+			score += Math.min(15, glyph.data.imageData.width) * 0.25*/
 			
 			/*score = glyph.data.imageData.width
 			score /= (glyphMaxDist + 1)
 			score /= (glyphMaxDist + 1)
 			score /= (targetMaxDist + 1)
 			score /= (targetMaxDist + 1)*/
+			
+			if (debug)
+				console.log(
+					"x(" + xPen.toString().padStart(3) + ") " +
+					"\"" + glyph.c + "\" " +
+					"score(" + score.toFixed(5).padStart(8) + ") " +
+					"width(" + glyph.data.imageData.width.toString().padStart(2) + ") " +
+					"glyphPixels(" + glyphPixelNum.toString().padStart(3) + ") " +
+					"targetPixels(" + targetPixelNum.toString().padStart(3) + ") " +
+					"glyphDist max(" + glyphDistanceMax.toFixed(2).padStart(6) + ") sum(" + glyphDistanceSum.toFixed(2).padStart(6) + ") " +
+					"targetDist max(" + targetDistanceMax.toFixed(2).padStart(6) + ") sum(" + targetDistanceSum.toFixed(2).padStart(6) + ") avg(" + (targetDistanceSum / targetDistanceNum).toFixed(2).padStart(6) + ") " +
+					"nonMatch(" + nonMatchingPixels.toFixed(2).padStart(6) + ") " +
+					"wrongCols(" + wrongColumns.toFixed(2).padStart(6) + ") " +
+					"estWidthDiff(" + estimatedWidthDiff + ") | " +
+					"scores(" + scoreParts.map(s => s.toFixed(2).padStart(6)).join(",") + ")")
 		}
 		else
 		{
 			score = 1
-			score /= (glyphMaxDist + 1)
-			score /= (targetMaxDist + 1)
-			score /= (targetMaxDist + 1)
+			score /= (glyphDistanceMax + 1)
+			score /= (targetDistanceMax + 1)
+			score /= (targetDistanceMax + 1)
 		}
 		
-		if (debug)
+		/*if (debug)
 			console.log(
 				"x(" + xPen.toString().padStart(3) + ") " +
 				"\"" + glyph.c + "\" " +
@@ -672,17 +782,22 @@ class ImageData
 				"estWidth(" + estimatedWidthBonus + ") " +
 				"{ maxDist(" + glyphMaxDist.toFixed(2).padStart(6) + ") avgDist(" + glyphAvgDist.toFixed(2).padStart(6) + ") } " +
 				"target { maxDist(" + targetMaxDist.toFixed(2).padStart(6) + ") avgDist(" + targetAvgDist.toFixed(2).padStart(6) + ") avgDistTrunc(" + targetAvgDistTruncated.toFixed(2).padStart(6) + ") }")
-			
+		*/
+		
 		return score
 	}
 	
 	
-	disambiguateGlyphI(x, w)
+	disambiguateGlyphI(x, w, debug = false)
 	{
+		let width = 1
+		for (let y = 0; y < this.imageData.height; y++)
+			width = Math.max(width, this.getRegionFilling(x, y, w, 1, false))
+		
 		let smallISep =
-			this.getRegionFilling(x, 17, w, 1, false) == 0 ||
-			this.getRegionFilling(x, 18, w, 1, false) == 0 ||
-			this.getRegionFilling(x, 19, w, 1, false) == 0
+			this.getRegionFilling(x, 17, w, 1, false) < Math.ceil(width / 2) ||
+			this.getRegionFilling(x, 18, w, 1, false) < Math.ceil(width / 2) ||
+			this.getRegionFilling(x, 19, w, 1, false) < Math.ceil(width / 2)
 			
 		let smallDotlessITittle =
 			this.getRegionFilling(x, 12, w, 1, false) == 0 &&
@@ -691,12 +806,19 @@ class ImageData
 			this.getRegionFilling(x, 15, w, 1, false) == 0
 			
 		let exclamationSep =
-			this.getRegionFilling(x, 27, w, 1, false) == 0 ||
-			this.getRegionFilling(x, 28, w, 1, false) == 0 ||
-			this.getRegionFilling(x, 29, w, 1, false) == 0 ||
-			this.getRegionFilling(x, 30, w, 1, false) == 0
+			this.getRegionFilling(x, 27, w, 1, false) < Math.ceil(width / 2) ||
+			this.getRegionFilling(x, 28, w, 1, false) < Math.ceil(width / 2)
 			
-		if (exclamationSep)
+		if (debug)
+		{
+			console.log(
+				"width(" + width + ") " +
+				"smallISep(" + smallISep + ") " +
+				"smallDotlessITittle(" + smallDotlessITittle + ") " +
+				"exclamationSep(" + exclamationSep + ")")
+		}
+			
+		if (exclamationSep && !smallISep)
 			return "!"
 			
 		if (smallISep && smallDotlessITittle)
@@ -718,7 +840,7 @@ class ImageData
 			{
 				let index = (y * this.imageData.width + x) * 4
 				
-				result += ImageData.colorProximity(
+				result += ImageHelper.colorProximity(
 					this.imageData.data[index + 0],
 					this.imageData.data[index + 1],
 					this.imageData.data[index + 2],
@@ -739,13 +861,17 @@ class ImageData
 	}
 	
 	
-	*recognizePlayerIterable(resultObj)
+	recognizePlayer(debug = false)
 	{
+		this.createCache()
+		
 		let str = ""
 		let x = 0
 		while (true)
 		{
-			//console.log("\n\n\n\n")
+			if (debug)
+				console.log("\n\n\n\n")
+			
 			let scores = []
 			
 			for (let skip = -1; skip <= 1; skip++)
@@ -756,12 +882,12 @@ class ImageData
 				
 				for (let glyph of nameGlyphs)
 				{
-					let score = this.scoreGlyph(glyph, xBegin + skip)
-					if (score == null)
+					if (glyph.skip)
 						continue
 					
-					if (skip < 0)
-						score -= 0.03
+					let score = this.scoreGlyph(glyph, xBegin + skip, true)
+					if (score == null)
+						continue
 					
 					scores.push({ x: xBegin + skip, glyph: glyph, score: score })
 				}
@@ -772,20 +898,23 @@ class ImageData
 			
 			scores.sort((a, b) => b.score - a.score)
 			
-			if (false)
+			if (debug)
 			{
+				console.log(scores)
 				for (let g = 0; g < 10; g++)
-					this.scoreGlyph(scores[g].glyph, scores[g].x, true)
+					this.scoreGlyph(scores[g].glyph, scores[g].x, true, true)
 			}
 			
 			let chosen = scores[0]
+			if (debug)
+				console.log("Chosen: " + chosen.glyph.c)
 			
 			if (chosen.x - x > 6)
 				str += " "
 			
 			let c = chosen.glyph.c
 			if (c == "l" || c == "i" || c == "I" || c == "!" || c == "ı")
-				c = this.disambiguateGlyphI(x, chosen.glyph.data.imageData.width)
+				c = this.disambiguateGlyphI(chosen.x, chosen.glyph.data.imageData.width, debug)
 			
 			str += c
 			
@@ -799,14 +928,29 @@ class ImageData
 			}*/
 			
 			for (let y = 0; y < this.imageData.height; y++)
+				for (let xp = 0; xp < chosen.glyph.data.imageData.width; xp++)
+				{
+					if (chosen.glyph.data.getBinaryPixel(xp, y))
+					{
+						if (this.getBinaryPixel(chosen.x + xp, y))
+							this.setPixel(chosen.x + xp, y, 0, 0, 255)
+						else
+							this.setPixel(chosen.x + xp, y, 255, 0, 255)
+					}
+					else
+					{
+						if (this.getBinaryPixel(chosen.x + xp, y))
+							this.setPixel(chosen.x + xp, y, 255, 0, 0)
+					}
+				}
+			
+			for (let y = 0; y < this.imageData.height; y++)
 			{
 				if (!this.getBinaryPixel(chosen.x, y))
 					this.setPixel(chosen.x, y, 0, 0, 255)
 			}
 			
 			x = chosen.x + chosen.glyph.data.imageData.width + 1
-			
-			yield null
 		}
 		
 		let isUppercase = (c) =>
@@ -838,12 +982,14 @@ class ImageData
 				str = replaceChar(str, i, "I")
 		}
 		
-		resultObj.name = str
+		return str
 	}
 	
 	
-	*recognizeScoreIterable(resultObj)
+	recognizeScore()
 	{
+		this.createCache()
+		
 		let value = 0
 		let x = this.imageData.width - 18 * 5
 		while (x < this.imageData.width)
@@ -884,38 +1030,36 @@ class ImageData
 			}
 			
 			x += 18
-			
-			yield null
 		}
 		
-		resultObj.score = value
+		return value
 	}
 	
 	
-	*recognizeFlagIterable(resultObj)
+	recognizeFlag()
 	{
+		this.createCache()
+		
 		//console.log("\n\n\n\n")
 		
 		let scores = []
-		for (let flag of flags)
+		for (let flag of flagData)
 		{
 			let score = this.scoreFlag(flag)
 			if (score == null)
 				continue
 			
 			scores.push({ flag: flag, score: score })
-			yield null
 		}
 		
 		scores.sort((a, b) => b.score - a.score)
 		
 		if (scores.length == 0 || scores[0].score < 0.75)
 		{
-			resultObj.flag = null
-			return
+			return ""
 		}
 		
 		let chosen = scores[0]
-		resultObj.flag = chosen.flag.c
+		return chosen.flag.c
 	}
 }

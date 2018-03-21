@@ -3,18 +3,21 @@
 <html>
 
 	<head>
-		<title>Mario Kart 8 Deluxe OCR Name Recognizer</title>
+		<title>Mario Kart 8 Deluxe OCR Tests</title>
 		<meta charset="UTF-8">
 	</head>
 	
 	<body>
-		Choose an image of an in-race or trophy results screen, then wait a few seconds:<br>
-		<input type="file" id="inputFile" accept=".jpg, .jpeg, .png" onchange="setImage(this)">
+		<button onclick="beginTests()">Begin Tests</button>
+		<br>
+		
+		<div id="divInfo"></div>
+		
 		<br>
 		
 		<div id="divTable"></div>
 		
-		<script src="src/recognize.js"></script>
+		<script src="src/test.js"></script>
 		<script src="src/image.js"></script>
 		<script src="src/nameGlyphs.js"></script>
 		<script src="src/scoreGlyphs.js"></script>
