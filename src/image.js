@@ -32,6 +32,13 @@ class ImageHelper
 				onload(image)
 		}
 		
+		img.onerror = () =>
+		{
+			if (onload != null)
+				onload(null)
+		}
+		
+		img.setAttribute("crossOrigin", "anonymous")
 		img.src = src
 		
 		return image

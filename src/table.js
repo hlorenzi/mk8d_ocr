@@ -1,7 +1,7 @@
 let working = false
 
 
-function setImage(input)
+function setImageFromFile(input)
 {
 	let div = document.getElementById("divTable")
 	
@@ -18,6 +18,36 @@ function setImage(input)
 	
 	clearTable()
 	ImageHelper.fromSrc(inputGetImageSrc(input), (img) => recognizeImage(workers, div, img))
+}
+
+
+function setImageFromLink(input)
+{
+	let div = document.getElementById("divTable")
+	
+	let workers = []
+	for (let i = 0; i < 6; i++)
+	{
+		let worker = new Worker("src/worker_name.js")
+		worker.onmessage = (ev) => addResult(ev.data)
+		workers.push(worker)
+	}
+	
+	working = true
+	window.requestAnimationFrame(animateWorking)
+	
+	clearTable()
+	
+	ImageHelper.fromSrc(input.value, (img) =>
+	{
+		if (img == null)
+			working = false
+		else
+		{
+			input.blur()
+			recognizeImage(workers, div, img)
+		}
+	})
 }
 
 

@@ -296,7 +296,9 @@
 				<td style="padding-left:1em; text-align:left;">
 					<div style="background-color:#cccccc; padding:10px; width:38em;">
 						<span style="font-size:0.75em;">Fill in automatically from an in-race or trophy results screenshot:</span>
-						<input type="file" id="inputFile" accept=".jpg, .jpeg, .png" onchange="setImage(this)">
+						<input type="file" id="inputFile" accept=".jpg, .jpeg, .png" onchange="setImageFromFile(this)">
+						<br>
+						<input id="inputLink" onchange="setImageFromLink(this)" onkeyup="setImageFromLink(this)" placeholder="...or paste a direct link to an image" style="width:30em;">
 						<br>
 						
 						<b><div id="divProgress"></div></b>
