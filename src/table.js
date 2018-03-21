@@ -1,28 +1,44 @@
 let working = false
 
 
+function setup()
+{
+	document.onpaste = (event) =>
+	{
+		let items = (event.clipboardData || event.originalEvent.clipboardData).items
+		
+		for (index in items)
+		{
+			let item = items[index]
+			if (item.kind === "file")
+			{
+				let blob = item.getAsFile()
+				let reader = new FileReader()
+				reader.onload = (event) =>
+					{ setImageFromSrc(event.target.result) }
+					
+				reader.readAsDataURL(blob)
+				startWorking()
+			}
+		}
+	}
+}
+
+
 function setImageFromFile(input)
 {
-	let div = document.getElementById("divTable")
-	
-	let workers = []
-	for (let i = 0; i < 6; i++)
-	{
-		let worker = new Worker("src/worker_name.js")
-		worker.onmessage = (ev) => addResult(ev.data)
-		workers.push(worker)
-	}
-	
-	working = true
-	window.requestAnimationFrame(animateWorking)
-	
-	clearTable()
-	ImageHelper.fromSrc(inputGetImageSrc(input), (img) => recognizeImage(workers, div, img))
+	setImageFromSrc(inputGetImageSrc(input))
 }
 
 
 function setImageFromLink(input)
 {
+	setImageFromSrc(input.value)
+}
+
+
+function setImageFromSrc(src, onload)
+{
 	let div = document.getElementById("divTable")
 	
 	let workers = []
@@ -33,18 +49,17 @@ function setImageFromLink(input)
 		workers.push(worker)
 	}
 	
-	working = true
-	window.requestAnimationFrame(animateWorking)
+	startWorking()
 	
 	clearTable()
 	
-	ImageHelper.fromSrc(input.value, (img) =>
+	ImageHelper.fromSrc(src, (img) =>
 	{
 		if (img == null)
 			working = false
 		else
 		{
-			input.blur()
+			document.getElementById("inputLink").blur()
 			recognizeImage(workers, div, img)
 		}
 	})
@@ -71,6 +86,7 @@ function clearTable()
 	generateTable()
 }
 
+
 let progressStep = 0
 function setProgress(visible)
 {
@@ -84,6 +100,16 @@ function setProgress(visible)
 		div.innerHTML = "Working" + ".".repeat(progressStep)
 		
 		progressStep = (progressStep + 0.2) % 6
+	}
+}
+
+
+function startWorking()
+{
+	if (!working)
+	{
+		working = true
+		window.requestAnimationFrame(animateWorking)
 	}
 }
 
