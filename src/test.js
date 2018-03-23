@@ -1,27 +1,10 @@
-let tests =
-[
-	{ src: "samples/sample (1).jpg",  expectedNames: ["ボノドゾゴォ","ざじずぜぞごげぐぎが","きしちにぴみりをあか","vƒ◆Yoshi-ぇ","[WUT]BenC★","Gamer Bro","[WUT]Jack","BRUC€ U","Maadi","Maadi","",""] },
-	{ src: "samples/sample (2).jpg",  expectedNames: ["BL★Clarf♪","BL★Lorenzi","Nuru","Karii","tony28esco","D4","Hjortur","Player","Matthew","donglekang","Spaghetti","flapjacks"] },
-	{ src: "samples/sample (5).jpg",  expectedNames: ["BL★Lorenzi","Dαγ","cafe","Ð¥◎アルフレド","BL★x² - UP","もぐ","らいらい♪","2nd!ひいらぎ","*.*","RomanDogg","ひ","☆Sal☆"] },
-	{ src: "samples/sample (9).jpg",  expectedNames: ["ßεαst","IWant2Die","BL · Fox04k","GoBowserJr","BL★Lorenzi","BL 3-UP","PARMESAN","AU★Shii","Coco","Zeeker","pavel","James"] },
-	{ src: "samples/sample (11).jpg", expectedNames: ["ze espurr","Red","Princess","BL★Lorenzi","Kimberly","Shelby","Mituo","オクト☆パスタ♪","Pauly P","JackAttack","",""] },
-	{ src: "samples/sample (13).jpg", expectedNames: ["xı SHARK","xı GunShow","xı cynda","xı Kurumi","xı pyrus","ARC WOR A","ARC 【ケヴィン】","ARC Charly","ARC Sayan","ARC〃Jaкe","ARC hope","xı f"] },
-	{ src: "samples/sample (15).jpg", expectedNames: ["Aλεξ","soepita","はるっち","こうすけ","いけめん","ちゅーりっぷ","ジャグラー","まんじですけど","てんしんらんまん","わたあめ","S★みく","りんゴ"] },
-	{ src: "samples/sample (16).jpg", expectedNames: ["msv Pyrax","msv L.","msvLALINEA","ÐVP Twonk","msv Mars","ÐVP egirls","ÐVPolice","msv d","ÐVP Ayano","ÐVP Talent","msv◇ Bry","ÐVP Enel"] },
-	{ src: "samples/sample (17).jpg", expectedNames: ["BL pb&j","м¢ brandon","BL Civil","м¢Bullseye","BL 3-UP","м¢★J","м¢ Leon","BL パップ","м¢ Squidz","м¢ DARKEEE","BL★Comic","BL"] },
-	{ src: "samples/sample (51).jpg", expectedNames: ["Infinity.R","Infinity.ロ","Infinity.v","すーはーとるみかいし","てつやまん","Infinity.B","Dr.マシリト","Infinity.ア","ゆうにや","Infinity*ク","Mimi*Lunar","あらぶるとくも"] },
-	{ src: "samples/sample (52).jpg", expectedNames: ["Ejy*Berry","Ejy*Kerry","3★LostLove","カオスなみつを","3★Lorenzi","カオスなチェリー","わくわく♪なおや","カオスなLiz","Ejy*Merry","3★KitKat","わくわくゆたか","わくわく♪ビートル"] },
-	{ src: "samples/sample (53).jpg", expectedNames: ["iD Thimo","iD★Jουβακ","iD 3-UP","iD☆rubyy","iD j♪","И>Borjilet","И☆Aketx☆","{И}Kabkal","И★ *rams*","И★BooSnow","",""] },
-]
-
-
 let table = null
 let testNum = 0
 let testsCompleted = 0
 let testsScore = 0
 
 
-function beginTests(input)
+function beginTests(kind)
 {
 	let div = document.getElementById("divTable")
 	
@@ -35,31 +18,46 @@ function beginTests(input)
 	for (let i = 0; i < 6; i++)
 	{
 		let worker = new Worker("src/worker_name.js")
-		worker.onmessage = (ev) => addResult(ev.data)
+		worker.onmessage = (ev) => addResult(ev.data, kind)
 		workers.push(worker)
 	}
 	
 	testNum = 0
 	testsCompleted = 0
+	testsScore = 0
 	
-	for (let test of tests)
+	for (let sample of samples)
 	{
-		ImageHelper.fromSrc(test.src, (img) => testImage(workers, table, img, test.expectedNames))
+		ImageHelper.fromSrc(sample.src, (img) => testImage(workers, table, img, sample, kind))
 	}
 	
 	refreshInfo()
 }
 
 
-function testImage(workers, table, img, expectedNames)
+function testImage(workers, table, img, sample, kind)
 {
 	img = img.stretchTo(1280, 720)
 	
-	let players = img.extractPlayers(false)
-	for (let p = 0; p < players.length; p++)
+	switch (kind)
 	{
-		testNum += 1
-		workers[p % workers.length].postMessage({ kind: "name", img: players[p], nameGlyphs: nameGlyphs, userdata: { expected: expectedNames[p] } })
+		case "name":
+			let players = img.extractPlayers(false)
+			for (let p = 0; p < players.length; p++)
+			{
+				testNum += 1
+				workers[p % workers.length].postMessage({ kind: "name", img: players[p], nameGlyphs: nameGlyphs, userdata: { expected: sample.names[p] } })
+			}
+			break
+			
+		case "score":
+			let scores = img.extractScores(false)
+			for (let p = 0; p < scores.length; p++)
+			{
+				testNum += 1
+				workers[p % workers.length].postMessage({ kind: "score", img: scores[p], scoreGlyphs: scoreGlyphs, userdata: { expected: sample.scores[p] } })
+			}
+			break
 	}
 }
 
@@ -117,15 +115,33 @@ function levenshteinDistance(s, t)
 }
 
 
-function addResult(data)
+function addResult(data, kind)
 {
 	testsCompleted += 1
 	
-	let compareRecognized = data.name.replace(/ /g, "")
-	let compareExpected = data.userdata.expected.replace(/ /g, "")
+	let score = 0
+	let str = ""
 	
-	let maxLen = Math.max(compareRecognized.length, compareExpected.length)
-	let score = (maxLen == 0 ? 1 : 1 - levenshteinDistance(compareRecognized, compareExpected) / maxLen)
+	switch (kind)
+	{
+		case "name":
+		{
+			let compareRecognized = data.name.replace(/ /g, "")
+			let compareExpected = data.userdata.expected.replace(/ /g, "")
+			
+			let maxLen = Math.max(compareRecognized.length, compareExpected.length)
+			score = (maxLen == 0 ? 1 : 1 - levenshteinDistance(compareRecognized, compareExpected) / maxLen)
+			str = data.name
+			break
+		}
+		
+		case "score":
+		{
+			score = (data.score == data.userdata.expected) ? 1 : 0
+			str = data.score.toString()
+			break
+		}
+	}
 	
 	testsScore += score
 	refreshInfo()
@@ -144,16 +160,30 @@ function addResult(data)
 	let span1 = document.createElement("span")
 	span1.style.backgroundColor = rgbToHex(255 - score * 255, score * 230, 120)
 	span1.style.fontSize = "2em"
-	span1.innerHTML = "[" + (score * 100).toFixed(2) + "%] " + data.name
+	span1.innerHTML = "[" + (score * 100).toFixed(2) + "%] " + str
 	td2.appendChild(span1)
 	tr.appendChild(td2)
 	table.appendChild(tr)
 	
-	canvas.onclick = () =>
+	switch (kind)
 	{
-		console.log("\"" + data.name + "\"")
-		let worker = new Worker("src/worker_name.js")
-		worker.postMessage({ kind: "name", img: imgOriginal, debug: true, nameGlyphs: nameGlyphs })
+		case "name":
+			canvas.onclick = () =>
+			{
+				console.log("\"" + data.name + "\"")
+				let worker = new Worker("src/worker_name.js")
+				worker.postMessage({ kind: "name", img: imgOriginal, debug: true, nameGlyphs: nameGlyphs })
+			}
+			break
+			
+		case "score":
+			canvas.onclick = () =>
+			{
+				console.log("\"" + data.score + "\"")
+				let worker = new Worker("src/worker_name.js")
+				worker.postMessage({ kind: "score", img: imgOriginal, debug: true, scoreGlyphs: scoreGlyphs })
+			}
+			break
 	}
 }
 

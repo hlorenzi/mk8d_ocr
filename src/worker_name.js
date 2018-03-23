@@ -31,7 +31,7 @@ onmessage = (ev) =>
 			for (let i = 0; i < scoreGlyphs.length; i++)
 				scoreGlyphs[i].data = Object.assign(new ImageHelper(), scoreGlyphs[i].data)
 			
-			postMessage({ img: img, kind: ev.data.kind, score: img.recognizeScore(), userdata: ev.data.userdata })
+			postMessage({ imgOriginal: img.clone(), img: img, kind: ev.data.kind, score: img.recognizeScore(ev.data.debug), userdata: ev.data.userdata })
 			break
 		}
 		

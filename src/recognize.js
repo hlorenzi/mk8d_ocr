@@ -1,4 +1,6 @@
-let names = []
+let recognizedNames = []
+let recognizedScores = []
+let finishedNum = 0
 
 
 function setImage(input)
@@ -11,6 +13,10 @@ function setImage(input)
 
 function recognizeResults(div, img)
 {
+	recognizedNames = []
+	recognizedScores = []
+	finishedNum = 0
+	
 	while (div.firstChild)
 		div.removeChild(div.firstChild)
 	
@@ -58,12 +64,17 @@ function recognizeResults(div, img)
 		let worker = new Worker("src/worker_name.js")
 		worker.onmessage = (ev) =>
 		{
+			finishedNum += 1
+			
 			switch (ev.data.kind)
 			{
-				case "name":  span1.innerHTML = ev.data.name; setName(ev.data.userdata.index, ev.data.name); break
-				case "score": span3.innerHTML = ev.data.score.toString(); break
+				case "name":  span1.innerHTML = ev.data.name; recognizedNames[ev.data.userdata.index] = ev.data.name; break
+				case "score": span3.innerHTML = ev.data.score.toString(); recognizedScores[ev.data.userdata.index] = ev.data.score; break
 				case "flag":  span2.innerHTML = ev.data.flag; break
 			}
+			
+			if (finishedNum == 12 * 3)
+				printSample()
 		}
 		
 		worker.postMessage({ kind: "name",  img: players[p], nameGlyphs: nameGlyphs,   userdata: { index: p } })
@@ -73,9 +84,11 @@ function recognizeResults(div, img)
 }
 
 
-function setName(index, name)
+function printSample()
 {
-	names[index] = name
+	let str = "{ src: \"samples/sample ().jpg\",\n"
+	str += "\tnames: " + JSON.stringify(recognizedNames) + ", \n"
+	str += "\tscores: " + JSON.stringify(recognizedScores) + " },"
 	
-	console.log(JSON.stringify(names))
+	console.log(str)
 }

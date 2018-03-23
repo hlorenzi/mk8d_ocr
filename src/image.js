@@ -347,7 +347,7 @@ class ImageHelper
 				scores.push(this.extractRegion(501, 133 + 42 * i, 86, 34))
 			
 			for (let i = 0; i < 12; i++)
-				scores[i] = scores[i].stretchTo(71, 28)
+				scores[i] = scores[i].stretchTo(69, 26)
 			
 			for (let i = 0; i < 12; i++)
 			{
@@ -360,7 +360,7 @@ class ImageHelper
 			}
 			
 			for (let i = 0; i < 12; i++)
-				scores[i] = scores[i].letterbox(21, 10, 92, 43)
+				scores[i] = scores[i].letterbox(24, 13, 92, 43)
 		}
 		else
 		{
@@ -600,76 +600,20 @@ class ImageHelper
 	}
 	
 	
-	scoreGlyph(glyph, xPen, forNames = true, debug = false)
+	scoreGlyph(glyph, xPen, debug = false)
 	{
-		/*let glyphMaxDist = 0
-		let glyphAvgDist = 0
-		let glyphAvgDistCount = 0
+		let nextColumn = this.cacheNextFilledColumn[xPen + 2]
+		let nextEmptyColumn = this.cacheNextEmptyColumn[xPen + glyph.data.imageData.width]
+		let endColumn = this.cacheNextFilledColumn[xPen + glyph.data.imageData.width + 4]
+		let prevColumn = this.cachePrevFilledColumn[xPen + glyph.data.imageData.width + 1]
 		
-		for (let y = 0; y < glyph.data.imageData.height; y++)
-		{
-			for (let x = 0; x < glyph.data.imageData.width; x++)
-			{
-				if (!glyph.data.getBinaryPixel(x, y))
-					continue
-				
-				let dist = this.getNearestBinaryPixel(xPen + x, y, xPen, 0, this.imageData.width, this.imageData.height)
-				//this.cacheNearestBinaryPixel[y][xPen + x] //
-				
-				glyphMaxDist = Math.max(glyphMaxDist, dist)
-				glyphAvgDist += dist
-				glyphAvgDistCount += 1
-			}
-		}
-		
-		if (glyphAvgDistCount > 0)
-			glyphAvgDist /= glyphAvgDistCount
-		
-		
-		let targetMaxDist = 0
-		let targetAvgDist = 0
-		let targetAvgDistCount = 0
-		let targetDists = []
-		
-		for (let y = 0; y < glyph.data.imageData.height; y++)
-		{
-			for (let x = xPen; x < xPen + glyph.data.imageData.width; x++)
-			{
-				if (!this.getBinaryPixel(x, y))
-					continue
-				
-				let dist = glyph.data.cacheNearestBinaryPixel[y][x - xPen] //glyph.data.getNearestBinaryPixel(x - xPen, y, 0, 0, glyph.data.imageData.width, glyph.data.imageData.height)
-				
-				targetMaxDist = Math.max(targetMaxDist, dist)
-				targetAvgDist += dist
-				targetAvgDistCount += 1
-				
-				targetDists.push(dist)
-			}
-		}
-		
-		if (targetAvgDistCount > 0)
-			targetAvgDist /= targetAvgDistCount
-		
-		let truncateHalfNum = 4
-		
-		targetDists.sort()
-		let targetAvgDistTruncated = 0
-		for (let i = truncateHalfNum; i < targetDists.length - truncateHalfNum; i++)
-			targetAvgDistTruncated += targetDists[i] / (targetDists.length - truncateHalfNum * 2)*/
-		
-		let nextColumn = this.cacheNextFilledColumn[xPen + 2] //this.findNextBinaryColumn(xPen + glyph.data.imageData.width - 2, false)
-		let nextEmptyColumn = this.cacheNextEmptyColumn[xPen + glyph.data.imageData.width] //this.findNextBinaryColumn(xPen + glyph.data.imageData.width - 2, false)
-		let endColumn = this.cacheNextFilledColumn[xPen + glyph.data.imageData.width + 4] //this.findNextBinaryColumn(xPen + glyph.data.imageData.width + 4, true)
-		let prevColumn = this.cachePrevFilledColumn[xPen + glyph.data.imageData.width + 1] //this.findPreviousBinaryColumn(xPen + glyph.data.imageData.width + 1, true)
-		
-		if (forNames && (nextColumn == null || prevColumn == null))
+		if ((nextColumn == null || prevColumn == null))
 			return null
 		
-		if (forNames && (nextColumn - xPen < 2 || (endColumn == null && prevColumn - xPen < 2)))
+		if ((nextColumn - xPen < 2 || (endColumn == null && prevColumn - xPen < 2)))
 			return null
 		
-		if (forNames && (nextEmptyColumn == null || nextEmptyColumn - xPen > 80))
+		if ((nextEmptyColumn == null || nextEmptyColumn - xPen > 80))
 			return null
 		
 		let estimatedWidthDiff = Math.abs((nextEmptyColumn - xPen) - glyph.data.imageData.width)
@@ -720,76 +664,39 @@ class ImageHelper
 			}
 		}
 		
-		let score = 0
-		if (forNames)
-		{
-			let scoreParts =
-			[
-				-Math.pow(glyphDistanceMax <= 1 ? 0 : glyphDistanceMax, 1.5) * 5,
-				-glyphDistanceSum / (glyphPixelNum * 0.1),
-				-glyphDistanceSum * 0.05,
-				-Math.pow(targetDistanceMax <= 1 ? 0 : targetDistanceMax, 1.5) * 10,
-				-(targetDistanceSum / targetDistanceNum) * 25,
-				-targetDistanceSum * 0.1,
-				-nonMatchingPixels * 0.05,
-				+(glyph.data.imageData.width < 8 ? -5 + (glyph.data.imageData.width * 0.5) : 20 + (glyph.data.imageData.width - 8) * 0.5),
-				+estimatedWidthBonus * 19,
-				(glyph.data.imageData.width < 8 && estimatedWidthBonus < 0.5) ? -10 : 0,
-				(glyph.data.imageData.width < 8 && estimatedWidthBonus > 0.5) ? 10 : 0,
-				glyphPixelNum * 0.075,
-			]
-			
-			scoreParts.forEach(s => score += s)
-			
-			
-			/*score += 1 / (glyphAvgDist + 1) / (glyphAvgDist + 1)
-			score += 1 / (targetAvgDistTruncated + 1) / (targetAvgDistTruncated + 1) / (targetAvgDistTruncated + 1)
-			score -= Math.pow(2, glyphMaxDist) * 0.205
-			score -= Math.pow(3, targetMaxDist) * 0.2025
-			score += estimatedWidthBonus
-			//score *= 1 + glyph.data.imageData.width / 100
-			score -= wrongColumns * 5
-			score += Math.min(15, glyph.data.imageData.width) * 0.25*/
-			
-			/*score = glyph.data.imageData.width
-			score /= (glyphMaxDist + 1)
-			score /= (glyphMaxDist + 1)
-			score /= (targetMaxDist + 1)
-			score /= (targetMaxDist + 1)*/
-			
-			if (debug)
-				console.log(
-					"x(" + xPen.toString().padStart(3) + ") " +
-					"\"" + glyph.c + "\" " +
-					"score(" + score.toFixed(5).padStart(8) + ") " +
-					"width(" + glyph.data.imageData.width.toString().padStart(2) + ") " +
-					"glyphPixels(" + glyphPixelNum.toString().padStart(3) + ") " +
-					"targetPixels(" + targetPixelNum.toString().padStart(3) + ") " +
-					"glyphDist max(" + glyphDistanceMax.toFixed(2).padStart(6) + ") sum(" + glyphDistanceSum.toFixed(2).padStart(6) + ") " +
-					"targetDist max(" + targetDistanceMax.toFixed(2).padStart(6) + ") sum(" + targetDistanceSum.toFixed(2).padStart(6) + ") avg(" + (targetDistanceSum / targetDistanceNum).toFixed(2).padStart(6) + ") " +
-					"nonMatch(" + nonMatchingPixels.toFixed(2).padStart(6) + ") " +
-					"wrongCols(" + wrongColumns.toFixed(2).padStart(6) + ") " +
-					"estWidthDiff(" + estimatedWidthDiff + ") | " +
-					"scores(" + scoreParts.map(s => s.toFixed(2).padStart(6)).join(",") + ")")
-		}
-		else
-		{
-			score = 1
-			score /= (glyphDistanceMax + 1)
-			score /= (targetDistanceMax + 1)
-			score /= (targetDistanceMax + 1)
-		}
+		let scoreParts =
+		[
+			-Math.pow(glyphDistanceMax <= 1 ? 0 : glyphDistanceMax, 1.5) * 5,
+			-glyphDistanceSum / (glyphPixelNum * 0.1),
+			-glyphDistanceSum * 0.05,
+			-Math.pow(targetDistanceMax <= 1 ? 0 : targetDistanceMax, 1.5) * 10,
+			-(targetDistanceSum / targetDistanceNum) * 25,
+			-targetDistanceSum * 0.1,
+			-nonMatchingPixels * 0.05,
+			+(glyph.data.imageData.width < 8 ? -5 + (glyph.data.imageData.width * 0.5) : 20 + (glyph.data.imageData.width - 8) * 0.5),
+			+estimatedWidthBonus * 19,
+			(glyph.data.imageData.width < 8 && estimatedWidthBonus < 0.5) ? -10 : 0,
+			(glyph.data.imageData.width < 8 && estimatedWidthBonus > 0.5) ? 10 : 0,
+			glyphPixelNum * 0.075,
+		]
 		
-		/*if (debug)
+		let score = 0
+		scoreParts.forEach(s => score += s)
+		
+		if (debug)
 			console.log(
 				"x(" + xPen.toString().padStart(3) + ") " +
 				"\"" + glyph.c + "\" " +
 				"score(" + score.toFixed(5).padStart(8) + ") " +
+				"width(" + glyph.data.imageData.width.toString().padStart(2) + ") " +
+				"glyphPixels(" + glyphPixelNum.toString().padStart(3) + ") " +
+				"targetPixels(" + targetPixelNum.toString().padStart(3) + ") " +
+				"glyphDist max(" + glyphDistanceMax.toFixed(2).padStart(6) + ") sum(" + glyphDistanceSum.toFixed(2).padStart(6) + ") " +
+				"targetDist max(" + targetDistanceMax.toFixed(2).padStart(6) + ") sum(" + targetDistanceSum.toFixed(2).padStart(6) + ") avg(" + (targetDistanceSum / targetDistanceNum).toFixed(2).padStart(6) + ") " +
+				"nonMatch(" + nonMatchingPixels.toFixed(2).padStart(6) + ") " +
 				"wrongCols(" + wrongColumns.toFixed(2).padStart(6) + ") " +
-				"estWidth(" + estimatedWidthBonus + ") " +
-				"{ maxDist(" + glyphMaxDist.toFixed(2).padStart(6) + ") avgDist(" + glyphAvgDist.toFixed(2).padStart(6) + ") } " +
-				"target { maxDist(" + targetMaxDist.toFixed(2).padStart(6) + ") avgDist(" + targetAvgDist.toFixed(2).padStart(6) + ") avgDistTrunc(" + targetAvgDistTruncated.toFixed(2).padStart(6) + ") }")
-		*/
+				"estWidthDiff(" + estimatedWidthDiff + ") | " +
+				"scores(" + scoreParts.map(s => s.toFixed(2).padStart(6)).join(",") + ")")
 		
 		return score
 	}
@@ -835,6 +742,63 @@ class ImageHelper
 			return "i"
 		
 		return "l"
+	}
+	
+	
+	recognizeDigit(xPen, debug = false)
+	{
+		let scores = []
+		
+		for (let x = -1; x <= 3; x++)
+		{
+			let u   = this.getRegionFilling(x + xPen + 6,  16, 7, 3)
+			let ul  = this.getRegionFilling(x + xPen + 3,  18, 3, 7)
+			let ur  = this.getRegionFilling(x + xPen + 14, 18, 3, 7)
+			let m   = this.getRegionFilling(x + xPen + 6,  25, 7, 3)
+			let bl  = this.getRegionFilling(x + xPen + 3,  27, 3, 7)
+			let br  = this.getRegionFilling(x + xPen + 14, 27, 3, 7)
+			let b   = this.getRegionFilling(x + xPen + 6,  34, 7, 3)
+			let one = this.getRegionFilling(x + xPen + 9,  18, 4, 14)
+			
+			let max = Math.max(u, ul, ur, m, bl, br, b, one)
+			
+			if (debug)
+				console.log(
+					"max: " + max.toFixed(2) + ", " +
+					"segments: [" +
+					" u: " + (u  .toFixed(2)) + ", " +
+					"ul: " + (ul .toFixed(2)) + ", " +
+					"ur: " + (ur .toFixed(2)) + ", " +
+					" m: " + (m  .toFixed(2)) + ", " +
+					"bl: " + (bl .toFixed(2)) + ", " +
+					"br: " + (br .toFixed(2)) + ", " +
+					" b: " + (b  .toFixed(2)) + ", " +
+					" 1: " + (one.toFixed(2)) + "]")
+					
+			let has = (x) => x
+			let not = (x) => 1 - x
+			
+			scores.push({ x: x, digit: 0, score: has(u) + has(ul) + has(ur) + not(m) + has(bl) + has(br) + has(b) + not(one) })
+			scores.push({ x: x, digit: 1, score: not(u) + not(ul) + not(ur) + not(m) + not(bl) + not(br) + not(b) + has(one) - 1 })
+			scores.push({ x: x, digit: 2, score: has(u) + not(ul) + has(ur) + has(m) + has(bl) + not(br) + has(b) + not(one) })
+			scores.push({ x: x, digit: 3, score: has(u) + not(ul) + has(ur) + has(m) + not(bl) + has(br) + has(b) + not(one) })
+			scores.push({ x: x, digit: 4, score: not(u) + has(ul) + has(ur) + has(m) + not(bl) + has(br) + not(b) + not(one) })
+			scores.push({ x: x, digit: 5, score: has(u) + has(ul) + not(ur) + has(m) + not(bl) + has(br) + has(b) + not(one) })
+			scores.push({ x: x, digit: 6, score: has(u) + has(ul) + not(ur) + has(m) + has(bl) + has(br) + has(b) + not(one) })
+			scores.push({ x: x, digit: 7, score: has(u) + not(ul) + has(ur) + not(m) + not(bl) + has(br) + not(b) + not(one) })
+			scores.push({ x: x, digit: 8, score: has(u) + has(ul) + has(ur) + has(m) + has(bl) + has(br) + has(b) + not(one) })
+			scores.push({ x: x, digit: 9, score: has(u) + has(ul) + has(ur) + has(m) + not(bl) + has(br) + has(b) + not(one) })
+		}
+		
+		scores.sort((a, b) => b.score - a.score)
+		
+		if (debug)
+		{
+			for (let entry of scores)
+				console.log("x(" + entry.x.toString().padStart(2) + "), digit " + entry.digit + ", score: " + entry.score.toFixed(2).padStart(5))
+		}
+		
+		return scores[0].digit
 	}
 	
 	
@@ -892,7 +856,7 @@ class ImageHelper
 					if (glyph.skip)
 						continue
 					
-					let score = this.scoreGlyph(glyph, xBegin + skip, true)
+					let score = this.scoreGlyph(glyph, xBegin + skip)
 					if (score == null)
 						continue
 					
@@ -909,7 +873,7 @@ class ImageHelper
 			{
 				console.log(scores)
 				for (let g = 0; g < 10; g++)
-					this.scoreGlyph(scores[g].glyph, scores[g].x, true, true)
+					this.scoreGlyph(scores[g].glyph, scores[g].x, true)
 			}
 			
 			let chosen = scores[0]
@@ -993,46 +957,39 @@ class ImageHelper
 	}
 	
 	
-	recognizeScore()
+	recognizeScore(debug)
 	{
 		this.createCache()
 		
 		let value = 0
 		let x = this.imageData.width - 18 * 5
+		
+		let emptyRegion = this.getRegionFilling(0, 0, this.imageData.width, 5)
+		if (emptyRegion > 0.1)
+			return 0
+			
 		while (x < this.imageData.width)
 		{
-			//console.log("\n\n\n\n")
+			if (debug)
+				console.log("\n\n\n\n")
 			
 			let regionFilling = this.getRegionFilling(x, 0, 18, this.imageData.height)
 			if (regionFilling > 0.01)
 			{
-				let scores = []
-				for (let disp = 0; disp <= 1; disp++)
-				{
-					for (let glyph of scoreGlyphs)
-					{
-						let score = this.scoreGlyph(glyph, x + disp, false)
-						if (score == null)
-							continue
-						
-						scores.push({ x: x + disp, glyph: glyph, score: score })
-					}
-				}
+				let digit = this.recognizeDigit(x, debug)
 				
-				if (scores.length == 0)
+				if (debug)
+					console.log("chosen: " + digit)
+				
+				if (digit == null)
 					break
 				
-				scores.sort((a, b) => b.score - a.score)
-
-				let chosen = scores[0]
-				value = (value * 10) + (chosen.glyph.c.charCodeAt(0) - "0".charCodeAt(0))
-				
-				//console.log(chosen.glyph.c)
+				value = (value * 10) + digit
 				
 				for (let y = 0; y < this.imageData.height; y++)
 				{
-					if (!this.getBinaryPixel(chosen.x, y))
-						this.setPixel(chosen.x, y, 0, 0, 255)
+					if (!this.getBinaryPixel(x, y))
+						this.setPixel(x, y, 0, 0, 255)
 				}
 			}
 			
