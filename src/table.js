@@ -33,11 +33,14 @@ function setImageFromFile(input)
 
 function setImageFromLink(input)
 {
-	setImageFromSrc(input.value)
+	if (input.value.includes("youtube"))
+		setYoutubeVideo(input.value)
+	else
+		setImageFromSrc(input.value)
 }
 
 
-function setImageFromSrc(src, onload)
+function setImageFromSrc(src)
 {
 	let div = document.getElementById("divTable")
 	
@@ -63,6 +66,53 @@ function setImageFromSrc(src, onload)
 			recognizeImage(workers, div, img)
 		}
 	})
+}
+
+
+let ytPlayer = null
+function setYoutubeVideo(url)
+{
+	if (ytPlayer != null)
+		return
+	
+	console.log("yt")
+	console.log(ytPlayer)
+	document.getElementById("inputLink").blur()
+	
+	let events = { }
+	
+	ytPlayer = new YT.Player("divVideo",
+	{
+		width: 1920 / 4,
+		height: 1080 / 4,
+		videoId: url.substr(url.indexOf("?v=") + 3),
+		events:
+		{
+			"onReady": (ev) => events.onReady(ev),
+			"onStateChange": (ev) => events.onStateChange(ev)
+		}
+	})
+	
+	console.log(ytPlayer)
+	
+	let handle = null
+	
+	events.onReady = (ev) =>
+	{
+		console.log("onReady")
+		console.log(ev.target)
+		ev.target.playVideo()
+		ev.target.seekTo(6 * 60 + 13, true)
+	}
+	
+	events.onStateChange = (ev) =>
+	{
+		console.log("onStateChange")
+		console.log(ev.target)
+		
+		let time = !ev.target.getCurrentTime ? 0.0 : ev.target.getCurrentTime()
+		console.log("state(" + ev.data + ") at " + time)
+	}
 }
 
 

@@ -303,13 +303,14 @@
 						
 						<input type="file" id="inputFile" accept=".jpg, .jpeg, .png" onchange="setImageFromFile(this)">
 						<br>
-						<input id="inputLink" onchange="setImageFromLink(this)" onkeyup="setImageFromLink(this)" placeholder="...or paste a copied image or a direct link to one" style="width:30em;">
+						<input id="inputLink" onkeyup="setImageFromLink(this)" placeholder="...or paste a copied image or a direct link to one" style="width:30em;">
 						<br>
 						
 						<b><div id="divProgress"></div></b>
 						
 						<br>
 						<canvas id="canvasInput" width="1280" height="720" style="width:38em; display:none;"></canvas>
+						<div id="divVideo"></div>
 					</div>
 				</td>
 			</tr>
@@ -331,6 +332,8 @@
 		<script src="src/scoreGlyphs.js"></script>
 		<script src="src/flags.js"></script>
 		<script src="src/inputImage.js"></script>
+		
+		<script src="https://www.youtube.com/iframe_api"></script>
 	</body>
 
 </html>
