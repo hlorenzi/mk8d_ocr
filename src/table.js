@@ -369,10 +369,12 @@ function drawTable(elem, clans)
 		while (usedHashes.find(h => ((Math.abs(hash - h) + 256) % 256) < 5) != null)
 			hash += 5;
 		
-		usedHashes.push(hash % 256)
+		hash %= 256
 		
-		clan.hue = (hash % 256) / 256
-		clan.saturation = (clan.tag == null || clan.tag == "" ? 0 : 0.8)
+		usedHashes.push(hash)
+		
+		clan.hue = hash / 256
+		clan.saturation = (clan.tag == null || clan.tag == "" ? 0 : (hash >= 150 && hash <= 215 ? (hash >= 165 && hash <= 200 ? 0.4 : 0.6) : 0.8))
 	}
 	
 	// Join all players into an array
@@ -556,7 +558,7 @@ function drawTable(elem, clans)
 			ctx.save()
 			ctx.translate(CLAN_SCORE_X, 0)
 			ctx.scale(0.75, 1)
-			ctx.fillText(clan.score.toString(), 0, clan.h / 2, CLAN_SCORE_WIDTH - 20)
+			ctx.fillText(clan.score.toString(), 0, clan.h / 2 + clanTagSize * 0.05, CLAN_SCORE_WIDTH - 20)
 			ctx.restore()
 			
 			ctx.font = clanTagSize + "px Roboto"

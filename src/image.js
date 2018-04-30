@@ -208,12 +208,31 @@ class ImageHelper
 	}
 	
 	
-	setPixel(x, y, r, g, b)
+	getPixel(x, y, r, g, b)
 	{
+		if (x < 0 || y < 0 || x >= this.imageData.width || y >= this.imageData.height)
+			return { r: 0, g: 0, b: 0, a: 0 }
+		
+		let index = (y * this.imageData.width + x)
+		return {
+			r: this.imageData.data[index * 4 + 0],
+			g: this.imageData.data[index * 4 + 1],
+			b: this.imageData.data[index * 4 + 2],
+			a: this.imageData.data[index * 4 + 3]
+		}
+	}
+	
+	
+	setPixel(x, y, r, g, b, a = 255)
+	{
+		if (x < 0 || y < 0 || x >= this.imageData.width || y >= this.imageData.height)
+			return
+		
 		let index = (y * this.imageData.width + x)
 		this.imageData.data[index * 4 + 0] = r
 		this.imageData.data[index * 4 + 1] = g
 		this.imageData.data[index * 4 + 2] = b
+		this.imageData.data[index * 4 + 3] = a
 	}
 	
 	
@@ -279,12 +298,83 @@ class ImageHelper
 	}
 	
 	
+	displace(xTop, yTop)
+	{
+		let newImage = this.clone()
+		
+		for (let y = 0; y < this.imageData.height; y++)
+			for (let x = 0; x < this.imageData.width; x++)
+				newImage.setPixel(x, y, 0, 0, 0, 255)
+		
+		for (let y = 0; y < this.imageData.height; y++)
+		{
+			for (let x = 0; x < this.imageData.width; x++)
+			{
+				let fromPixel = this.getPixel(x, y)
+				newImage.setPixel(xTop + x, yTop + y, fromPixel.r, fromPixel.g, fromPixel.b, 255)
+			}
+		}
+		
+		return newImage
+	}
+	
+	
 	detectTrophyScreen()
 	{
 		let region = this.extractRegion(0, 0, 250, 20)
 		let isRed = region.wholeImageProximity(220, 0, 0)
 		
 		return isRed > 0.9
+	}
+	
+	
+	findProbableLetterBase()
+	{
+		let heights = []
+		for (let y = this.imageData.height - 5; y >= this.imageData.height / 3 * 2; y--)
+			heights[y] = 0
+		
+		for (let x = 0; x < this.imageData.width; x++)
+		{
+			let y = this.imageData.height - 1
+			while (y >= this.imageData.height / 2)
+			{
+				if (this.getBinaryPixel(x, y))
+					break
+				
+				y--
+			}
+			
+			if (y <= this.imageData.height / 2)
+				continue
+			
+			heights[y]++
+		}
+		
+		let maxCount = 0
+		let result = 0
+		for (let y = this.imageData.height - 5; y >= this.imageData.height / 3 * 2; y--)
+		{
+			//console.log("height[" + y + "] = " + heights[y])
+			if (heights[y] > maxCount)
+			{
+				maxCount = heights[y]
+				result = y
+			}
+		}
+		
+		//console.log("letterbase: " + result)
+		return result
+		
+		/*let accum = 0
+		let count = 0
+		for (let y = this.imageData.height - 5; y >= this.imageData.height / 3 * 2; y--)
+		{
+			accum += y * heights[y]
+			count += heights[y]
+		}
+		
+		return Math.round(accum / count)*/
 	}
 	
 	
@@ -302,9 +392,9 @@ class ImageHelper
 			
 			for (let i = 0; i < 12; i++)
 			{
-				let isYellow = players[i].wholeImageProximity(241, 220, 15)
+				let isYellow = players[i].regionProximity(0, 0, players[i].imageData.width, 5, 241, 220, 15)
 				
-				if (isYellow > 0.7)
+				if (isYellow > 0.8)
 					players[i].binarize(77, 85, 64, 0.7)
 				else
 					players[i].binarize(202, 195, 187, 0.85)
@@ -320,12 +410,15 @@ class ImageHelper
 			
 			for (let i = 0; i < 12; i++)
 			{
-				let isYellow = players[i].wholeImageProximity(241, 220, 15)
+				let isYellow = players[i].regionProximity(0, 0, players[i].imageData.width, 5, 241, 220, 15)
 				
-				if (isYellow > 0.7)
+				if (isYellow > 0.8)
 					players[i].binarize(77, 85, 64, 0.8)
 				else
 					players[i].binarize(255, 255, 255, 0.7)
+				
+				//let letterBase = players[i].findProbableLetterBase()
+				//players[i] = players[i].letterbox(0, letterBase - 31, players[i].imageData.width, players[i].imageData.height)
 			}
 		}
 		
@@ -351,9 +444,9 @@ class ImageHelper
 			
 			for (let i = 0; i < 12; i++)
 			{
-				let isYellow = scores[i].wholeImageProximity(241, 220, 15)
+				let isYellow = scores[i].regionProximity(0, 0, scores[i].imageData.width, 5, 241, 220, 15)
 				
-				if (isYellow > 0.7)
+				if (isYellow > 0.8)
 					scores[i].binarize(77, 85, 64, 0.7)
 				else
 					scores[i].binarize(202, 195, 187, 0.85)
@@ -369,9 +462,9 @@ class ImageHelper
 			
 			for (let i = 0; i < 12; i++)
 			{
-				let isYellow = scores[i].wholeImageProximity(241, 220, 15)
+				let isYellow = scores[i].regionProximity(0, 0, scores[i].imageData.width, 5, 241, 220, 15)
 				
-				if (isYellow > 0.7)
+				if (isYellow > 0.8)
 					scores[i].binarize(77, 85, 64, 0.7)
 				else
 					scores[i].binarize(255, 255, 255, 0.7)
@@ -412,6 +505,25 @@ class ImageHelper
 		let bFactor = Math.abs(b1 - b2) / 255
 		
 		return 1 - Math.max(0, Math.min(1, ((rFactor + gFactor + bFactor) / 3)))
+	}
+	
+	
+	regionProximity(x1, y1, x2, y2, r, g, b)
+	{
+		let result = 0
+		for (let yy = y1; yy < y2; yy++)
+		for (let xx = x1; xx < x2; xx++)
+		{
+			let i = (yy * this.imageData.width + xx)
+			
+			result += ImageHelper.colorProximity(
+				r, g, b,
+				this.imageData.data[i * 4 + 0],
+				this.imageData.data[i * 4 + 1],
+				this.imageData.data[i * 4 + 2])
+		}
+		
+		return result / ((x2 - x1) * (y2 - y1))
 	}
 	
 	
@@ -838,6 +950,7 @@ class ImageHelper
 		
 		let str = ""
 		let x = 0
+		let confidence = 0
 		while (true)
 		{
 			if (debug)
@@ -879,6 +992,8 @@ class ImageHelper
 			let chosen = scores[0]
 			if (debug)
 				console.log("Chosen: " + chosen.glyph.c)
+			
+			confidence += (chosen.score)
 			
 			if (chosen.x - x > 6)
 				str += " "
@@ -953,7 +1068,7 @@ class ImageHelper
 				str = replaceChar(str, i, "I")
 		}
 		
-		return str
+		return { str: str, confidence: confidence }
 	}
 	
 	
