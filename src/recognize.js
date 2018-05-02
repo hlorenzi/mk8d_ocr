@@ -32,16 +32,18 @@ function recognizeResults(div, img)
 	{
 		let tr = document.createElement("tr")
 		
+		let nameCanvas = players[p].makeCanvas()
 		let td1 = document.createElement("td")
-		td1.appendChild(players[p].makeCanvas())
+		td1.appendChild(nameCanvas)
 		tr.appendChild(td1)
 		
 		let td2 = document.createElement("td")
 		td2.appendChild(flags[p].makeCanvas())
 		tr.appendChild(td2)
 		
+		let scoreCanvas = scores[p].makeCanvas()
 		let td3 = document.createElement("td")
-		td3.appendChild(scores[p].makeCanvas())
+		td3.appendChild(scoreCanvas)
 		tr.appendChild(td3)
 		
 		let td4 = document.createElement("td")
@@ -75,6 +77,20 @@ function recognizeResults(div, img)
 			
 			if (finishedNum == 12 * 3)
 				printSample()
+		}
+		
+		nameCanvas.onclick = () =>
+		{
+			console.log("\"" + recognizedNames[p] + "\"")
+			let worker = new Worker("src/worker_name.js")
+			worker.postMessage({ kind: "name", img: players[p], debug: true, nameGlyphs: nameGlyphs })
+		}
+		
+		scoreCanvas.onclick = () =>
+		{
+			console.log("\"" + recognizedScores[p] + "\"")
+			let worker = new Worker("src/worker_name.js")
+			worker.postMessage({ kind: "score", img: scores[p], debug: true, scoreGlyphs: scoreGlyphs })
 		}
 		
 		worker.postMessage({ kind: "name",  img: players[p], nameGlyphs: nameGlyphs,   userdata: { index: p } })
