@@ -190,6 +190,8 @@ function recognizeImage(workers, table, img)
 			if (doneNum == 12 * 3)
 			{
 				working = false
+				for (let worker of workers)
+					worker.terminate()
 			}
 		}
 	}
@@ -213,15 +215,19 @@ function refreshInputData()
 	for (let player of recognizedPlayers)
 	{
 		let name = player.name || ""
+		
+		if (name.trim() == "")
+			continue
+		
 		let score = ""
 		if (player.score != null)
 			score = player.score.toString()
 		
 		let flag = ""
 		if (player.flag != null)
-			flag = "[" + player.flag + "]"
+			flag = "[" + player.flag + "] "
 		
-		str += name + " " + score.toString() + " " + flag + "\n"
+		str += name + " " + flag + score.toString() + "\n"
 	}
 	
 	document.getElementById("textareaData").value = str

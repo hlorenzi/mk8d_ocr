@@ -26,24 +26,48 @@ function refreshFromData()
 }
 
 
-function loadExample()
+function loadExample1()
 {
 	document.getElementById("textareaData").value =
 		"A - Full Team Name\n" +
-		"Player 1 112 [us]\n" +
-		"Player 2 110 [gb]\n" +
-		"Player 3 76 [au]\n" +
-		"Player 4 72 [ca]\n" +
-		"Player 5 90 [de]\n" +
-		"Player 6 55 [ie]\n" +
+		"Player 1 [us] 112\n" +
+		"Player 2 [gb] 110\n" +
+		"Player 3 [au] 76\n" +
+		"Player 4 [ca] 72\n" +
+		"Player 5 [de] 90\n" +
+		"Player 6 [ie] 55\n" +
 		"\n" +
 		"B\n" +
-		"Player 7 70+20+8 [cl]\n" +
-		"Player 8 78 [br]\n" +
+		"Player 7 [cl] 70+20+8\n" +
+		"Player 8 [br] 78\n" +
 		"Player 9 46\n" +
-		"Player 10 100 [kr]\n" +
-		"Player 11 68 [jp]\n" +
-		"Player 12 79 [mx]"
+		"Player 10 [kr] 100\n" +
+		"Player 11 [jp] 68\n" +
+		"Player 12 [mx] 79 "
+		
+	queueRefresh()
+}
+
+
+function loadExample2()
+{
+	document.getElementById("textareaData").value =
+		"#mkwii\n\n" +
+		"A - Full Team Name\n" +
+		"Player 1 [us] 112|65|42\n" +
+		"Player 2 [gb] 110|32|88\n" +
+		"Player 3 [au] 76|18|45\n" +
+		"Player 4 [ca] 72|26|79\n" +
+		"Player 5 [de] 90|80|54\n" +
+		"Player 6 [ie] 55|38|34\n" +
+		"\n" +
+		"B\n" +
+		"Player 7 [cl] 70+20+8|50|62\n" +
+		"Player 8 [br] 78|45|70\n" +
+		"Player 9 46|28|61\n" +
+		"Player 10 [kr] 100|80|49\n" +
+		"Player 11 [jp] 68|36|38\n" +
+		"Player 12 [mx] 79|15|108 "
 		
 	queueRefresh()
 }
@@ -60,25 +84,37 @@ function handleConvertSyntax()
 
 function convertSyntax(str)
 {
+	let lines = str.replace("\r\n", "\n").split("\n").map(s => s.trim()).filter(s => s != "")
+	if (lines.length == 0)
+		return ""
+	
 	let converted = ""
 		
 	let data = parseData(str)
 	
-	if (detectSyntax(str))
+	let gamemode = "mk8d"
+	if (lines[0].startsWith("#"))
 	{
-		for (let clan of data)
+		gamemode = lines[0].substr(1)
+		lines.splice(0, 1)
+		converted += "#" + gamemode + "\n\n"
+	}
+	
+	if (detectSyntax(lines))
+	{
+		for (let clan of data.clans)
 		{
 			for (let player of clan.players)
-				converted += clan.tag + " " + player.name + " " + player.score + " [" + player.flag + "]\n"
+				converted += clan.tag + " " + player.name + " [" + player.flag + "] " + player.gpScores.join("|") + "\n"
 		}
 	}
 	else
 	{
-		for (let clan of data)
+		for (let clan of data.clans)
 		{
 			converted += (clan.tag == null ? "-" : clan.tag) + (clan.name == null ? "" : " - " + clan.name) + "\n"
 			for (let player of clan.players)
-				converted += (player.name == null || player.name == "" ? "-" : player.name) + " " + player.score + " [" + player.flag + "]\n"
+				converted += (player.name == null || player.name == "" ? "-" : player.name) + " [" + player.flag + "] " + player.gpScores.join("|") + "\n"
 			
 			converted += "\n"
 		}
@@ -88,12 +124,10 @@ function convertSyntax(str)
 }
 
 
-function detectSyntax(str)
+function detectSyntax(lines)
 {
-	let lines = str.replace("\r\n", "\n").split("\n").map(s => s.trim()).filter(s => s != "")
-	
 	if (lines.length == 0)
-		return []
+		return false
 	
 	// Is first line a clan name?
 	return (parsePlayer(lines[0]) == null)
@@ -107,7 +141,14 @@ function parseData(str)
 	if (lines.length == 0)
 		return []
 	
-	if (detectSyntax(str))
+	let gamemode = "mk8d"
+	if (lines[0].startsWith("#"))
+	{
+		gamemode = lines[0].substr(1)
+		lines.splice(0, 1)
+	}
+	
+	if (detectSyntax(lines))
 	{
 		// Parse mode: clan names on separate lines
 		let clans = []
@@ -130,7 +171,7 @@ function parseData(str)
 			}
 		}
 		
-		return clans
+		return { gamemode, clans }
 	}
 	else
 	{
@@ -169,7 +210,7 @@ function parseData(str)
 			clan.players.push(player)
 		}
 		
-		return clans
+		return { gamemode, clans }
 	}
 }
 
@@ -191,17 +232,28 @@ function parseClan(str)
 
 function parsePlayer(str)
 {
-	let matches = str.trim().match(/(.*)[ ]+([0-9+]+)(?:[ ]*\[(.*)\])?$/)
+	let matches = str.trim().match(/(.*)[ ]+([0-9+|]+)$/)
 	if (matches == null)
 		return null
 	
-	let score = matches[2].split("+").reduce((accum, x) => accum + parseInt(x), 0)
+	let nameMatches = matches[1].trim().match(/(.*)[ ]+(?:\[(.*)\])?$/)
 	
-	return {
-		name:  matches[1].trim(),
-		score: score,
-		flag:  matches[3] == null ? null : matches[3].trim()
+	let name = (nameMatches == null ? matches[1] : nameMatches[1]).trim()
+	let flag = (nameMatches == null ? "" : (nameMatches[2] == null ? "" : nameMatches[2].trim()))
+	
+	let safeParseInt = (s) =>
+	{
+		let x = parseInt(s)
+		if (isNaN(x) || !isFinite(x))
+			return 0
+		
+		return x
 	}
+	
+	let gpScores = matches[2].split("|").map(s => s.split("+").reduce((accum, x) => accum + safeParseInt(x), 0))
+	let totalScore = gpScores.reduce((accum, x) => accum + x, 0)
+	
+	return { name, gpScores, totalScore, flag }
 }
 
 
@@ -318,34 +370,66 @@ function trimSeparatorsEnd(str)
 }
 
 
-function drawTable(elem, clans)
+function drawTable(elem, gamedata)
 {
-	let TOTAL_WIDTH = parseInt(elem.width)
-	let TOTAL_HEIGHT = parseInt(elem.height)
+	let clans = gamedata.clans || []
+	
+	let SCORE_COLUMNS = 1
+	clans.forEach(clan => clan.players.forEach(p => SCORE_COLUMNS = Math.max(SCORE_COLUMNS, p.gpScores.length)))
+	if (SCORE_COLUMNS > 1)
+		SCORE_COLUMNS += 1
+	
+	let TOTAL_WIDTH = 860 + 40 * (SCORE_COLUMNS - 1)
+	let TOTAL_HEIGHT = 520
+	
+	elem.width = TOTAL_WIDTH
+	elem.height = TOTAL_HEIGHT
+	
 	let HEADER_HEIGHT = TOTAL_HEIGHT / 13
-	let CLAN_NAME_X = TOTAL_WIDTH / 12 * 2
-	let CLAN_NAME_WIDTH = TOTAL_WIDTH / 12 * 4
-	let CLAN_SCORE_X = TOTAL_WIDTH / 12 * 10
-	let CLAN_SCORE_WIDTH = TOTAL_WIDTH / 12 * 4
 	let CLAN_MARGIN_HEIGHT = TOTAL_HEIGHT / 13 / 2
-	let PLAYER_WIDTH = TOTAL_WIDTH / 12 * 4
-	let PLAYER_X = TOTAL_WIDTH / 2 - PLAYER_WIDTH / 2
 	let PLAYER_HEIGHT = TOTAL_HEIGHT / 14
-	let PLAYER_NAME_X = PLAYER_WIDTH / 20 * 5.5
-	let PLAYER_NAME_WIDTH = PLAYER_WIDTH / 20 * 10
-	let PLAYER_FLAG_X = PLAYER_WIDTH / 20 * 11
-	let PLAYER_FLAG_WIDTH = PLAYER_HEIGHT * 0.6 * (4 / 3)
-	let PLAYER_FLAG_HEIGHT = PLAYER_HEIGHT * 0.6
-	let PLAYER_SCORE_X = PLAYER_WIDTH / 20 * 15.5
-	let PLAYER_SCORE_WIDTH = PLAYER_WIDTH / 20 * 4
-	let PLAYER_RANK_X = PLAYER_WIDTH / 20 * 18.5
-	let PLAYER_RANK_WIDTH = PLAYER_WIDTH / 20 * 4
-	let PLAYER_RANK_SIZE = PLAYER_HEIGHT * 0.8
+	
+	let x = 0
+	let COLUMNS = 56 + SCORE_COLUMNS * 4
+	let COLUMN = TOTAL_WIDTH / COLUMNS
+	
+	let CLAN_NAME_WIDTH = COLUMN * 20
+	let CLAN_NAME_X = x + CLAN_NAME_WIDTH / 2
+	x += CLAN_NAME_WIDTH
+	
+	let PLAYER_WIDTH = COLUMN * (COLUMNS - 40)
+	let PLAYER_X = x
+	x += PLAYER_WIDTH
+	
+	let CLAN_SCORE_WIDTH = COLUMN * 20
+	let CLAN_SCORE_X = x + CLAN_SCORE_WIDTH / 2
+	
+	let PLAYER_COLUMNS = 16 + 4 * SCORE_COLUMNS
+	let PLAYER_COLUMN = PLAYER_WIDTH / PLAYER_COLUMNS
+	x = 0
+	
+	let PLAYER_NAME_WIDTH = PLAYER_COLUMN * 10
+	let PLAYER_NAME_X = x + PLAYER_NAME_WIDTH / 2
+	x += PLAYER_NAME_WIDTH
+	
+	let PLAYER_FLAG_WIDTH = PLAYER_COLUMN * 3
+	let PLAYER_FLAG_ICON_WIDTH = PLAYER_HEIGHT * 0.6 * (4 / 3)
+	let PLAYER_FLAG_ICON_HEIGHT = PLAYER_HEIGHT * 0.6
+	let PLAYER_FLAG_X = x + PLAYER_FLAG_WIDTH / 2
+	x += PLAYER_FLAG_WIDTH
+	
+	let PLAYER_SCORE_WIDTH = PLAYER_COLUMN * 4// PLAYER_WIDTH / PLAYER_SUBDIV * (4 * SCORE_COLUMNS)
+	let PLAYER_SCORE_X = x + PLAYER_SCORE_WIDTH / 2// PLAYER_WIDTH / PLAYER_SUBDIV * (13.5 + (2 * SCORE_COLUMNS))
+	x += PLAYER_SCORE_WIDTH * SCORE_COLUMNS
+	
+	let PLAYER_RANK_WIDTH = PLAYER_COLUMN * 3
+	let PLAYER_RANK_X = x + PLAYER_RANK_WIDTH / 2
+	let PLAYER_RANK_ICON_WIDTH = PLAYER_HEIGHT * 0.8
 	
 	// Calculate and sort clan scores
-	clans.map(clan => Object.assign(clan, { score: clan.players.reduce((accum, p) => accum + p.score, 0) }))
+	clans.map(clan => Object.assign(clan, { score: clan.players.reduce((accum, p) => accum + p.totalScore, 0) }))
 	clans.sort((a, b) => b.score - a.score)
-	clans.forEach(clan => clan.players.sort((a, b) => b.score - a.score))
+	clans.forEach(clan => clan.players.sort((a, b) => b.totalScore - a.totalScore))
 	
 	// Calculate clan colors
 	let unusedHues =
@@ -381,7 +465,7 @@ function drawTable(elem, clans)
 	// Join all players into an array
 	let players = []
 	clans.forEach(clan => clan.players.forEach(player => players.push(player)))
-	players.sort((a, b) => b.score - a.score)
+	players.sort((a, b) => b.totalScore - a.totalScore)
 	
 	let hasAnyFlags = false
 	players.forEach(p => hasAnyFlags |= (p.flag != null))
@@ -452,7 +536,7 @@ function drawTable(elem, clans)
 	// Calculate player rankings
 	for (let p = 0; p < players.length; p++)
 	{
-		if (p > 0 && players[p].score == players[p - 1].score)
+		if (p > 0 && players[p].totalScore == players[p - 1].totalScore)
 			players[p].ranking = players[p - 1].ranking
 		else
 			players[p].ranking = p + 1
@@ -512,7 +596,7 @@ function drawTable(elem, clans)
 	let raceScores = [0, 1, 4, 0, 11, 0, 22, 0, 39, 48, 58, 69, 82]
 	let totalScore = clans.reduce((accum, clan) => accum + clan.score, 0)
 	let raceNum = totalScore / raceScores[players.length]
-	if (raceScores[players.length] > 0 && Math.floor(raceNum) == raceNum)
+	if (gamedata.gamemode == "mk8d" && raceScores[players.length] > 0 && Math.floor(raceNum) == raceNum)
 		raceStr = "    •    " + Math.floor(raceNum) + " race" + (raceNum > 1 ? "s" : "")
 	
 	ctx.font = (HEADER_HEIGHT * 0.65) + "px Roboto"
@@ -603,7 +687,7 @@ function drawTable(elem, clans)
 			{
 				let imgRank = document.getElementById("imgRank" + player.ranking)
 				if (imgRank != null && imgRank.imgLoaded == true)
-					ctx.drawImage(imgRank, PLAYER_RANK_X - PLAYER_RANK_SIZE / 2, PLAYER_HEIGHT / 2 - PLAYER_RANK_SIZE / 2, PLAYER_RANK_SIZE, PLAYER_RANK_SIZE)
+					ctx.drawImage(imgRank, PLAYER_RANK_X - PLAYER_RANK_ICON_WIDTH / 2, PLAYER_HEIGHT / 2 - PLAYER_RANK_ICON_WIDTH / 2, PLAYER_RANK_ICON_WIDTH, PLAYER_RANK_ICON_WIDTH)
 			}
 			else
 			{			
@@ -621,16 +705,52 @@ function drawTable(elem, clans)
 				let flagElem = document.getElementById("imgFlag_" + player.flag.toLowerCase())
 				if (flagElem != null && flagElem.imgLoaded == true)
 				{
-					ctx.fillRect(PLAYER_FLAG_X - 2, PLAYER_HEIGHT / 2 - PLAYER_FLAG_HEIGHT / 2 - 2, PLAYER_FLAG_WIDTH + 4, PLAYER_FLAG_HEIGHT + 4)
-					ctx.drawImage(flagElem, PLAYER_FLAG_X, PLAYER_HEIGHT / 2 - PLAYER_FLAG_HEIGHT / 2, PLAYER_FLAG_WIDTH, PLAYER_FLAG_HEIGHT)
+					ctx.fillRect(PLAYER_FLAG_X - PLAYER_FLAG_ICON_WIDTH / 2 - 2, PLAYER_HEIGHT / 2 - PLAYER_FLAG_ICON_HEIGHT / 2 - 2, PLAYER_FLAG_ICON_WIDTH + 4, PLAYER_FLAG_ICON_HEIGHT + 4)
+					ctx.drawImage(flagElem, PLAYER_FLAG_X - PLAYER_FLAG_ICON_WIDTH / 2, PLAYER_HEIGHT / 2 - PLAYER_FLAG_ICON_HEIGHT / 2, PLAYER_FLAG_ICON_WIDTH, PLAYER_FLAG_ICON_HEIGHT)
 				}
 			}
 			
-			ctx.translate(PLAYER_SCORE_X, 0)
+			if (SCORE_COLUMNS > 1)
+			{
+				for (let i = 0; i < player.gpScores.length; i++)
+				{
+					ctx.save()
+					ctx.translate(PLAYER_SCORE_X + PLAYER_SCORE_WIDTH * i, 0)
+					ctx.scale(0.75, 1)
+					ctx.font = (PLAYER_HEIGHT * 0.55) + "px Rubik Mono One"
+					ctx.fillStyle = "#000000"
+					ctx.globalAlpha = 0.8
+					ctx.fillText(player.gpScores[i].toString(), 0, PLAYER_HEIGHT / 2 + 2, PLAYER_SCORE_WIDTH)
+					ctx.restore()
+					
+					if (i > 0)
+					{
+						ctx.save()
+						ctx.fillStyle = "#ffffff"
+						ctx.globalAlpha = 0.3
+						ctx.fillRect(PLAYER_SCORE_X + PLAYER_SCORE_WIDTH * (i - 0.5) - 1, PLAYER_HEIGHT / 2 - PLAYER_HEIGHT * 0.4, 2, PLAYER_HEIGHT * 0.8)
+						ctx.restore()
+					}
+					
+				}
+			}
+			
+			if (SCORE_COLUMNS > 1)
+			{
+				ctx.save()
+				ctx.fillStyle = "#ffffff"
+				ctx.globalAlpha = 0.3
+				ctx.fillRect(PLAYER_SCORE_X + PLAYER_SCORE_WIDTH * (SCORE_COLUMNS - 1 - 0.5) - 1, 2, PLAYER_SCORE_WIDTH, PLAYER_HEIGHT - 4)
+				ctx.restore()
+			}
+			
+			ctx.save()
+			ctx.translate(PLAYER_SCORE_X + PLAYER_SCORE_WIDTH * (SCORE_COLUMNS - 1), 0)
 			ctx.scale(0.75, 1)
 			ctx.font = (PLAYER_HEIGHT * 0.65) + "px Rubik Mono One"
 			ctx.fillStyle = "#000000"
-			ctx.fillText(player.score.toString(), 0, PLAYER_HEIGHT / 2 + 2, PLAYER_SCORE_WIDTH)
+			ctx.fillText(player.totalScore.toString(), 0, PLAYER_HEIGHT / 2 + 2, PLAYER_SCORE_WIDTH)
+			ctx.restore()
 			
 			ctx.restore()
 		}
