@@ -3,7 +3,7 @@ let refreshTimeout = null
 
 function queueRefresh()
 {
-	document.getElementById("canvasTable").style.opacity = 0.5
+	document.getElementById("imgTable").style.opacity = 0.5
 	
 	if (refreshTimeout != null)
 		clearTimeout(refreshTimeout)
@@ -16,9 +16,38 @@ function refreshFromData()
 {
 	let textarea = document.getElementById("textareaData")
 	let canvas = document.getElementById("canvasTable")
+	let img = document.getElementById("imgTable")
 	
-	document.getElementById("canvasTable").style.opacity = 1
+	img.style.opacity = 1
+	
 	drawTable(canvas, parseData(textarea.value))
+	
+	img.src = canvas.toDataURL()
+}
+
+
+function copyToClipboard()
+{
+	// From https://stackoverflow.com/questions/27863617/is-it-possible-to-copy-a-canvas-image-to-the-clipboard
+	
+	let div = document.getElementById("divTable")
+	
+    if (document.body.createTextRange)
+	{
+        let range = document.body.createTextRange()
+        range.moveToElementText(div)
+        range.select()
+    }
+	else if (window.getSelection)
+	{
+        let selection = window.getSelection()
+        let range = document.createRange()
+        range.selectNodeContents(div)
+        selection.removeAllRanges()
+        selection.addRange(range)
+    }
+	
+	document.execCommand("Copy")
 }
 
 
@@ -466,10 +495,15 @@ function drawTable(elem, gamedata)
 		let hash = 118
 		let nameLower = (clan.tag == null ? "" : clan.tag.toLowerCase())
 		for (let i = 0; i < nameLower.length; i++)
+		{
+			if (nameLower[i] == " ")
+				continue
+			
 			hash += nameLower.charCodeAt(i) * 12
+		}
 		
-		while (usedHashes.find(h => ((Math.abs(hash - h) + 256) % 256) < 5) != null)
-			hash += 5;
+		while (usedHashes.find(h => ((Math.abs(hash - h) + 256) % 256) < 10) != null)
+			hash += 10;
 		
 		hash %= 256
 		
@@ -501,6 +535,7 @@ function drawTable(elem, gamedata)
 		{
 			allFlagsLoaded = false
 			let img = document.createElement("img")
+			img.setAttribute("crossOrigin", "anonymous")
 			img.id = id
 			img.style.display = "none"
 			img.imgLoaded = false
@@ -537,9 +572,9 @@ function drawTable(elem, gamedata)
 	// Load rank images
 	let rankSrcs =
 	[
-		"https://emojipedia-us.s3.amazonaws.com/thumbs/120/microsoft/106/crown_1f451.png",
-		"https://emojipedia-us.s3.amazonaws.com/thumbs/120/microsoft/106/second-place-medal_1f948.png",
-		"https://emojipedia-us.s3.amazonaws.com/thumbs/120/microsoft/106/third-place-medal_1f949.png"
+		"/assets/1st.png",
+		"/assets/2nd.png",
+		"/assets/3rd.png",
 	]
 	
 	let allRanksLoaded = true

@@ -41,6 +41,13 @@
 		{
 			font-size: 1.5em;
 		}
+		
+		#divTable
+		{
+			margin: 0;
+			border: 0;
+			padding: 0;
+		}
 	</style>
 	
 	<body onload="setup(); queueRefresh()" style="text-align:center;">
@@ -58,7 +65,11 @@
 							<button onclick="handleConvertSyntax()">Convert Syntax</button>
 						</td>
 						<td>
-							<canvas id="canvasTable" width="860" height="520"></canvas>
+							<canvas id="canvasTable" width="860" height="520" style="display:none;"></canvas>
+							<div id="divTable">
+								<img id="imgTable"></img>
+							</div>
+							<span>Right-click and select "Copy Image" to share!</span>
 						</td>
 					</tr>
 				</table>
