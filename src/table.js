@@ -572,9 +572,9 @@ function drawTable(elem, gamedata)
 	// Load rank images
 	let rankSrcs =
 	[
-		"/assets/1st.png",
-		"/assets/2nd.png",
-		"/assets/3rd.png",
+		window.location.href.substr(0, window.location.href.lastIndexOf("/")) + "/assets/1st.png",
+		window.location.href.substr(0, window.location.href.lastIndexOf("/")) + "/assets/2nd.png",
+		window.location.href.substr(0, window.location.href.lastIndexOf("/")) + "/assets/3rd.png",
 	]
 	
 	let allRanksLoaded = true
