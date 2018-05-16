@@ -3,7 +3,17 @@
 <html>
 
 	<head>
-		<title>Mario Kart 8 Deluxe OCR Table Maker</title>
+		<!-- Global site tag (gtag.js) - Google Analytics -->
+		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-119332275-1"></script>
+		<script>
+			window.dataLayer = window.dataLayer || [];
+			function gtag(){dataLayer.push(arguments);}
+			gtag('js', new Date());
+
+			gtag('config', 'UA-119332275-1');
+		</script>
+
+		<title>hlorenzi's Mario Kart Table Maker</title>
 		<meta charset="UTF-8">
 		<link href="https://fonts.googleapis.com/css?family=Roboto:900&amp;subset=cyrillic,cyrillic-ext,greek,greek-ext,latin-ext" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Rubik+Mono+One" rel="stylesheet">
@@ -42,7 +52,8 @@
 							<textarea id="textareaData" cols="30" rows="22" onkeyup="queueRefresh()"></textarea>
 							<br>
 							<button onclick="loadExample1()">Load MK8D Example</button>
-							<button onclick="loadExample2()">Load MKWii Example</button>
+							<button onclick="loadExample2()">Load MK8D FFA Example</button>
+							<button onclick="loadExample3()">Load MKWii Example</button>
 							<br>
 							<button onclick="handleConvertSyntax()">Convert Syntax</button>
 						</td>

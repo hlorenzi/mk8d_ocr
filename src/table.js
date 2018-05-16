@@ -1,7 +1,3 @@
-"use strict";
-// Fix for older browsers?
-
-
 let refreshTimeout = null
 
 
@@ -50,6 +46,27 @@ function loadExample1()
 
 
 function loadExample2()
+{
+	document.getElementById("textareaData").value =
+		"-\n" +
+		"Player 1 [us] 112\n" +
+		"Player 2 [gb] 110\n" +
+		"Player 3 [au] 76\n" +
+		"Player 4 [ca] 72\n" +
+		"Player 5 [de] 90\n" +
+		"Player 6 [ie] 55\n" +
+		"Player 7 [cl] 70+20+8\n" +
+		"Player 8 [br] 78\n" +
+		"Player 9 46\n" +
+		"Player 10 [kr] 100\n" +
+		"Player 11 [jp] 68\n" +
+		"Player 12 [mx] 79 "
+		
+	queueRefresh()
+}
+
+
+function loadExample3()
 {
 	document.getElementById("textareaData").value =
 		"#mkwii\n\n" +
