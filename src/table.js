@@ -59,7 +59,7 @@ function loadExample1()
 		"Player 2 [gb] 110\n" +
 		"Player 3 [au] 76\n" +
 		"Player 4 [ca] 72\n" +
-		"Player 5 [de] 90\n" +
+		"Player 5 [de] 90-10\n" +
 		"Player 6 [ie] 55\n" +
 		"\n" +
 		"B\n" +
@@ -82,7 +82,7 @@ function loadExample2()
 		"Player 2 [gb] 110\n" +
 		"Player 3 [au] 76\n" +
 		"Player 4 [ca] 72\n" +
-		"Player 5 [de] 90\n" +
+		"Player 5 [de] 90-10\n" +
 		"Player 6 [ie] 55\n" +
 		"Player 7 [cl] 70+20+8\n" +
 		"Player 8 [br] 78\n" +
@@ -104,7 +104,7 @@ function loadExample3()
 		"Player 2 [gb] 110|32|88\n" +
 		"Player 3 [au] 76|18|45\n" +
 		"Player 4 [ca] 72|26|79\n" +
-		"Player 5 [de] 90|80|54\n" +
+		"Player 5 [de] 90-10|80|54\n" +
 		"Player 6 [ie] 55|38|34\n" +
 		"\n" +
 		"B\n" +
@@ -256,6 +256,8 @@ function parseData(str)
 			clan.players.push(player)
 		}
 		
+		clans = clans.filter(clan => clan.players.length > 0)
+		
 		return { gamemode, clans }
 	}
 }
@@ -278,7 +280,7 @@ function parseClan(str)
 
 function parsePlayer(str)
 {
-	let matches = str.trim().match(/(.*)[ ]+([0-9+|]+)$/)
+	let matches = str.trim().match(/(.*)[ ]+([0-9+|-]+)$/)
 	if (matches == null)
 		return null
 	
@@ -296,10 +298,24 @@ function parsePlayer(str)
 		return x
 	}
 	
-	let gpScores = matches[2].split("|").map(s => s.split("+").reduce((accum, x) => accum + safeParseInt(x), 0))
-	let totalScore = gpScores.reduce((accum, x) => accum + x, 0)
+	let gpScoresStr = matches[2].split("|").map(s => s.trim().match(/((?:\+?|-)[0-9]+)/g))
 	
-	return { name, gpScores, totalScore, flag }
+	let gpScores = gpScoresStr.map(s => s.reduce((accum, x) =>
+	{
+		let value = safeParseInt(x)
+		return (value < 0) ? accum : accum + value
+	}, 0))
+	
+	let penalties = gpScoresStr.reduce((accum, gp) => accum + gp.reduce((accum, x) =>
+	{
+		let value = safeParseInt(x)
+		return (value > 0) ? accum : accum + value
+	}, 0), 0)
+	
+	let totalScoreWithoutPenalties = gpScores.reduce((accum, x) => accum + x, 0)
+	let totalScore = totalScoreWithoutPenalties + penalties
+	
+	return { name, gpScores, penalties, totalScoreWithoutPenalties, totalScore, flag }
 }
 
 
@@ -471,9 +487,14 @@ function drawTable(elem, gamedata)
 	let PLAYER_RANK_WIDTH = PLAYER_COLUMN * 3
 	let PLAYER_RANK_X = x + PLAYER_RANK_WIDTH / 2
 	let PLAYER_RANK_ICON_WIDTH = PLAYER_HEIGHT * 0.8
+	x += PLAYER_RANK_WIDTH
+	
+	let PLAYER_PENALTY_WIDTH = PLAYER_COLUMN * 2
+	let PLAYER_PENALTY_X = x + PLAYER_PENALTY_WIDTH / 2 - PLAYER_COLUMN * 1.5
 	
 	// Calculate and sort clan scores
 	clans.map(clan => Object.assign(clan, { score: clan.players.reduce((accum, p) => accum + p.totalScore, 0) }))
+	clans.map(clan => Object.assign(clan, { scoreWithoutPenalties: clan.players.reduce((accum, p) => accum + p.totalScoreWithoutPenalties, 0) }))
 	clans.sort((a, b) => b.score - a.score)
 	clans.forEach(clan => clan.players.sort((a, b) => b.totalScore - a.totalScore))
 	
@@ -492,7 +513,7 @@ function drawTable(elem, gamedata)
 	{
 		let clan = clans[c]
 		
-		let hash = 118
+		let hash = 122
 		let nameLower = (clan.tag == null ? "" : clan.tag.toLowerCase())
 		for (let i = 0; i < nameLower.length; i++)
 		{
@@ -519,12 +540,12 @@ function drawTable(elem, gamedata)
 	players.sort((a, b) => b.totalScore - a.totalScore)
 	
 	let hasAnyFlags = false
-	players.forEach(p => hasAnyFlags |= (p.flag != null))
+	players.forEach(p => hasAnyFlags |= (p.flag != null && p.flag != ""))
 	
 	if (!hasAnyFlags)
 	{
-		PLAYER_NAME_X += PLAYER_WIDTH / 20 + 1
-		PLAYER_NAME_WIDTH += PLAYER_WIDTH / 20 + 2
+		PLAYER_NAME_X += PLAYER_COLUMN * 1.5
+		PLAYER_NAME_WIDTH += PLAYER_COLUMN * 3
 	}
 	
 	// Load flag images
@@ -646,7 +667,7 @@ function drawTable(elem, gamedata)
 	
 	let raceStr = ""
 	let raceScores = [0, 1, 4, 0, 11, 0, 22, 0, 39, 48, 58, 69, 82]
-	let totalScore = clans.reduce((accum, clan) => accum + clan.score, 0)
+	let totalScore = clans.reduce((accum, clan) => accum + clan.scoreWithoutPenalties, 0)
 	let raceNum = totalScore / raceScores[players.length]
 	if (gamedata.gamemode == "mk8d" && raceScores[players.length] > 0 && Math.floor(raceNum) == raceNum)
 		raceStr = "    •    " + Math.floor(raceNum) + " race" + (raceNum > 1 ? "s" : "")
@@ -803,6 +824,17 @@ function drawTable(elem, gamedata)
 			ctx.fillStyle = "#000000"
 			ctx.fillText(player.totalScore.toString(), 0, PLAYER_HEIGHT / 2 + 2, PLAYER_SCORE_WIDTH)
 			ctx.restore()
+			
+			if (player.penalties < 0)
+			{
+				ctx.save()
+				ctx.translate(PLAYER_PENALTY_X + PLAYER_PENALTY_WIDTH, 0)
+				ctx.scale(1, 1)
+				ctx.font = (PLAYER_HEIGHT * 0.45) + "px Rubik Mono One"
+				ctx.fillStyle = "#000000"
+				ctx.fillText(player.penalties.toString(), 0, PLAYER_HEIGHT / 2 + 2, PLAYER_PENALTY_WIDTH)
+				ctx.restore()
+			}
 			
 			ctx.restore()
 		}
