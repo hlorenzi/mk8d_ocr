@@ -774,12 +774,12 @@ function drawTable(elem, gamedata)
 				if (imgRank != null && imgRank.imgLoaded == true)
 					ctx.drawImage(imgRank, PLAYER_RANK_X - PLAYER_RANK_ICON_WIDTH / 2, PLAYER_HEIGHT / 2 - PLAYER_RANK_ICON_WIDTH / 2, PLAYER_RANK_ICON_WIDTH, PLAYER_RANK_ICON_WIDTH)
 			}
-			else if (player.ranking == lowestRanking)
+			/*else if (player.ranking == lowestRanking)
 			{
 				let imgRank = document.getElementById("imgRank4")
 				if (imgRank != null && imgRank.imgLoaded == true)
 					ctx.drawImage(imgRank, PLAYER_RANK_X - PLAYER_RANK_ICON_WIDTH / 2, PLAYER_HEIGHT / 2 - PLAYER_RANK_ICON_WIDTH / 2, PLAYER_RANK_ICON_WIDTH, PLAYER_RANK_ICON_WIDTH)
-			}
+			}*/
 			else
 			{			
 				let rankStr = player.ranking + "th"
