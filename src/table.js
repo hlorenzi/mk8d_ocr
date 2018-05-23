@@ -1,6 +1,14 @@
 let refreshTimeout = null
 
 
+function main()
+{
+	document.getElementById("textareaData").placeholder = 
+		"Type in the results here, or load an example below.\n\n" +
+		"If you have a screenshot, upload it at the bottom of the page."
+}
+
+
 function queueRefresh()
 {
 	document.getElementById("imgTable").style.opacity = 0.5
@@ -596,6 +604,7 @@ function drawTable(elem, gamedata)
 		window.location.href.substr(0, window.location.href.lastIndexOf("/")) + "/assets/1st.png",
 		window.location.href.substr(0, window.location.href.lastIndexOf("/")) + "/assets/2nd.png",
 		window.location.href.substr(0, window.location.href.lastIndexOf("/")) + "/assets/3rd.png",
+		window.location.href.substr(0, window.location.href.lastIndexOf("/")) + "/assets/turtle.png",
 	]
 	
 	let allRanksLoaded = true
@@ -607,12 +616,15 @@ function drawTable(elem, gamedata)
 		queueRefresh()
 	
 	// Calculate player rankings
+	let lowestRanking = 1
 	for (let p = 0; p < players.length; p++)
 	{
 		if (p > 0 && players[p].totalScore == players[p - 1].totalScore)
 			players[p].ranking = players[p - 1].ranking
 		else
 			players[p].ranking = p + 1
+		
+		lowestRanking = players[p].ranking
 	}
 	
 	// Calculate layout
@@ -759,6 +771,12 @@ function drawTable(elem, gamedata)
 			if (player.ranking <= 3)
 			{
 				let imgRank = document.getElementById("imgRank" + player.ranking)
+				if (imgRank != null && imgRank.imgLoaded == true)
+					ctx.drawImage(imgRank, PLAYER_RANK_X - PLAYER_RANK_ICON_WIDTH / 2, PLAYER_HEIGHT / 2 - PLAYER_RANK_ICON_WIDTH / 2, PLAYER_RANK_ICON_WIDTH, PLAYER_RANK_ICON_WIDTH)
+			}
+			else if (player.ranking == lowestRanking)
+			{
+				let imgRank = document.getElementById("imgRank4")
 				if (imgRank != null && imgRank.imgLoaded == true)
 					ctx.drawImage(imgRank, PLAYER_RANK_X - PLAYER_RANK_ICON_WIDTH / 2, PLAYER_HEIGHT / 2 - PLAYER_RANK_ICON_WIDTH / 2, PLAYER_RANK_ICON_WIDTH, PLAYER_RANK_ICON_WIDTH)
 			}
