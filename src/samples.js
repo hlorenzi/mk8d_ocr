@@ -57,6 +57,6 @@ let samples =
 		scores: [101,74,62,68,71,63,69,49,34,47,0,0] },
 		
 	{ src: "samples/sample (54).jpg",
-		names: ["Obi-Wan","Tony","Sir Paul","Grivao","'TßÐ★Mel","Taizz","Abi","LiriLP","Martine","Shrine","SubZero515","Laila"], 
+		names: ["Obi-Wan","Tony","Sir Paul","Grivao","ŤßÐ★Mel","Taizz","Abi","LiriLP","Martine","Shrine","SubZero515","Laila"], 
 		scores: [90001,43984,66565,1033,6595,1017,1075,1427,1002,1086,1716,669] },
 ]
