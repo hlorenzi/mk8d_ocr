@@ -5,7 +5,8 @@ function main()
 {
 	document.getElementById("textareaData").placeholder = 
 		"Type in the results here, or load an example below.\n\n" +
-		"If you have a screenshot, upload it at the bottom of the page."
+		"If you have a saved MK8D screenshot, upload it at the bottom of the page.\n\n" +
+		"If you have copied an MK8D screenshot to the clipboard, just hit Ctrl+V anywhere."
 }
 
 
@@ -25,10 +26,11 @@ function refreshFromData()
 	let textarea = document.getElementById("textareaData")
 	let canvas = document.getElementById("canvasTable")
 	let img = document.getElementById("imgTable")
+	let warning = document.getElementById("spanWarning")
 	
 	img.style.opacity = 1
 	
-	drawTable(canvas, parseData(textarea.value))
+	drawTable(canvas, warning, parseData(textarea.value))
 	
 	img.src = canvas.toDataURL()
 }
@@ -440,8 +442,12 @@ function trimSeparatorsEnd(str)
 }
 
 
-function drawTable(elem, gamedata)
+function drawTable(elem, warningElem, gamedata)
 {
+	warningElem.style.backgroundColor = "white"
+	warningElem.style.color = "black"
+	warningElem.innerHTML = ""
+	
 	let clans = gamedata.clans || []
 	
 	let SCORE_COLUMNS = 1
@@ -497,8 +503,8 @@ function drawTable(elem, gamedata)
 	let PLAYER_RANK_ICON_WIDTH = PLAYER_HEIGHT * 0.8
 	x += PLAYER_RANK_WIDTH
 	
-	let PLAYER_PENALTY_WIDTH = PLAYER_COLUMN * 2
-	let PLAYER_PENALTY_X = x + PLAYER_PENALTY_WIDTH / 2 - PLAYER_COLUMN * 1.5
+	let PLAYER_PENALTY_WIDTH = PLAYER_COLUMN * 3.1
+	let PLAYER_PENALTY_X = x + (PLAYER_COLUMN * 3) - PLAYER_COLUMN * 1.5
 	
 	// Calculate and sort clan scores
 	clans.map(clan => Object.assign(clan, { score: clan.players.reduce((accum, p) => accum + p.totalScore, 0) }))
@@ -680,9 +686,20 @@ function drawTable(elem, gamedata)
 	let raceStr = ""
 	let raceScores = [0, 1, 4, 0, 11, 0, 22, 0, 39, 48, 58, 69, 82]
 	let totalScore = clans.reduce((accum, clan) => accum + clan.scoreWithoutPenalties, 0)
+	warningElem.innerHTML += "Total Points: " + totalScore
+	
 	let raceNum = totalScore / raceScores[players.length]
-	if (gamedata.gamemode == "mk8d" && raceScores[players.length] > 0 && Math.floor(raceNum) == raceNum)
-		raceStr = "    •    " + Math.floor(raceNum) + " race" + (raceNum > 1 ? "s" : "")
+	if (gamedata.gamemode == "mk8d")
+	{
+		if (raceScores[players.length] > 0 && Math.floor(raceNum) == raceNum)
+			raceStr = "    •    " + Math.floor(raceNum) + " race" + (raceNum > 1 ? "s" : "")
+		else
+		{
+			warningElem.innerHTML += "<br>⚠ Doesn't look like a proper result! Did someone disconnect? ⚠"
+			warningElem.style.color = "white"
+			warningElem.style.backgroundColor = "red"
+		}
+	}
 	
 	ctx.font = (HEADER_HEIGHT * 0.65) + "px Roboto"
 	ctx.textBaseline = "middle"
@@ -846,11 +863,12 @@ function drawTable(elem, gamedata)
 			if (player.penalties < 0)
 			{
 				ctx.save()
-				ctx.translate(PLAYER_PENALTY_X + PLAYER_PENALTY_WIDTH, 0)
+				ctx.translate(PLAYER_PENALTY_X, 0)
 				ctx.scale(1, 1)
 				ctx.font = (PLAYER_HEIGHT * 0.45) + "px Rubik Mono One"
 				ctx.fillStyle = "#000000"
-				ctx.fillText(player.penalties.toString(), 0, PLAYER_HEIGHT / 2 + 2, PLAYER_PENALTY_WIDTH)
+				ctx.textAlign = "center"
+				ctx.fillText("(" + player.penalties.toString() + ")", 0, PLAYER_HEIGHT / 2 + 2, PLAYER_PENALTY_WIDTH)
 				ctx.restore()
 			}
 			

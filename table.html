@@ -17,6 +17,7 @@
 		<meta charset="UTF-8">
 		<link href="https://fonts.googleapis.com/css?family=Roboto:900&amp;subset=cyrillic,cyrillic-ext,greek,greek-ext,latin-ext" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Rubik+Mono+One" rel="stylesheet">
+		<link rel="shortcut icon" type="image/png" href="favicon.png"/>
 	</head>
 	
 	<style>
@@ -48,6 +49,12 @@
 			border: 0;
 			padding: 0;
 		}
+		
+		#spanWarning
+		{
+			background-color: white;
+			font-size: 1.5em;
+		}
 	</style>
 	
 	<body onload="main(); setup(); queueRefresh()" style="text-align:center;">
@@ -69,6 +76,8 @@
 							<div id="divTable">
 								<img id="imgTable"></img>
 							</div>
+							<span id="spanWarning"></span>
+							<br>
 							<span>Right-click and select "Copy Image" to share!</span>
 						</td>
 					</tr>
