@@ -1,4 +1,5 @@
 let refreshTimeout = null
+let warningFlashTimeout = null
 
 
 function main()
@@ -58,6 +59,36 @@ function copyToClipboard()
     }
 	
 	document.execCommand("Copy")
+}
+
+
+function clearWarning()
+{
+	if (warningFlashTimeout != null)
+		clearTimeout(warningFlashTimeout)
+	
+	warningFlashTimeout = null
+	
+	let warning = document.getElementById("spanWarning")
+	warning.style.backgroundColor = "white"
+	warning.style.color = "black"
+}
+
+
+function flashWarning(remaining = 16)
+{
+	let warning = document.getElementById("spanWarning")
+	
+	warning.style.backgroundColor = (remaining % 2 == 1) ? "white" : "red"
+	warning.style.color = (remaining % 2 == 1) ? "black" : "white"
+	
+	if (remaining > 0)
+	{
+		if (warningFlashTimeout != null)
+			clearTimeout(warningFlashTimeout)
+		
+		warningFlashTimeout = setTimeout(() => flashWarning(remaining - 1), 100)
+	}
 }
 
 
@@ -401,6 +432,7 @@ function isSeparator(c)
 {
 	return (
 		c == "." ||
+		c == "," ||
 		c == "*" ||
 		c == "·" ||
 		c == "■" ||
@@ -444,8 +476,7 @@ function trimSeparatorsEnd(str)
 
 function drawTable(elem, warningElem, gamedata)
 {
-	warningElem.style.backgroundColor = "white"
-	warningElem.style.color = "black"
+	clearWarning()
 	warningElem.innerHTML = ""
 	
 	let clans = gamedata.clans || []
@@ -696,8 +727,7 @@ function drawTable(elem, warningElem, gamedata)
 		else
 		{
 			warningElem.innerHTML += "<br>⚠ Doesn't look like a proper result! Did someone disconnect? ⚠"
-			warningElem.style.color = "white"
-			warningElem.style.backgroundColor = "red"
+			flashWarning()
 		}
 	}
 	
