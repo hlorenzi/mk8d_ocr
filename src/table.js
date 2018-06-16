@@ -3,12 +3,26 @@ let warningFlashTimeout = null
 let warningCanFlash = false
 
 
+let raceScores = [0, 1, 4, 0, 11, 0, 22, 0, 39, 48, 58, 69, 82]
+
+
 function main()
 {
 	document.getElementById("textareaData").placeholder = 
 		"Type in the results here, or load an example below.\n\n" +
 		"If you have a saved MK8D screenshot, upload it at the bottom of the page.\n\n" +
 		"If you have copied an MK8D screenshot to the clipboard, just hit Ctrl+V anywhere."
+		
+	document.getElementById("tableTotals").innerHTML =
+		"<tr style='font-size:1.25em;'><td>MK8D Point Totals</td><td>1 Race</td><td>12 Races</td></tr>" +
+		"<tr><td>12 Players / 6v6</td><td>" + raceScores[12] + "</td><td>" + (raceScores[12] * 12) + "</td></tr>" +
+		"<tr><td>11 Players / 6v5</td><td>" + raceScores[11] + "</td><td>" + (raceScores[11] * 12) + "</td></tr>" +
+		"<tr><td>10 Players / 5v5</td><td>" + raceScores[10] + "</td><td>" + (raceScores[10] * 12) + "</td></tr>" +
+		"<tr><td>9 Players / 3v3v3</td><td>" + raceScores[9] + "</td><td>" + (raceScores[9] * 12) + "</td></tr>" +
+		"<tr><td>8 Players / 4v4</td><td>" + raceScores[8] + "</td><td>" + (raceScores[8] * 12) + "</td></tr>" +
+		"<tr><td>6 Players / 3v3</td><td>" + raceScores[6] + "</td><td>" + (raceScores[6] * 12) + "</td></tr>" +
+		"<tr><td>4 Players / 2v2</td><td>" + raceScores[4] + "</td><td>" + (raceScores[4] * 12) + "</td></tr>" +
+		"<tr><td>2 Players / 1v1</td><td>" + raceScores[2] + "</td><td>" + (raceScores[2] * 12) + "</td></tr>"
 }
 
 
@@ -28,11 +42,12 @@ function refreshFromData()
 	let textarea = document.getElementById("textareaData")
 	let canvas = document.getElementById("canvasTable")
 	let img = document.getElementById("imgTable")
-	let warning = document.getElementById("spanWarning")
+	let spanTotal = document.getElementById("spanTotal")
+	let spanWarning = document.getElementById("spanWarning")
 	
 	img.style.opacity = 1
 	
-	drawTable(canvas, warning, parseData(textarea.value))
+	drawTable(canvas, spanTotal, spanWarning, parseData(textarea.value))
 	
 	img.src = canvas.toDataURL()
 }
@@ -78,7 +93,7 @@ function clearWarning()
 
 function flashWarning(remaining = 10)
 {
-	if (!warningCanFlash)
+	//if (!warningCanFlash)
 		remaining = 0
 	
 	let warning = document.getElementById("spanWarning")
@@ -480,10 +495,11 @@ function trimSeparatorsEnd(str)
 }
 
 
-function drawTable(elem, warningElem, gamedata)
+function drawTable(elem, totalElem, warningElem, gamedata)
 {
 	clearWarning()
 	warningElem.innerHTML = ""
+	totalElem.innerHTML = ""
 	
 	let clans = gamedata.clans || []
 	
@@ -721,19 +737,27 @@ function drawTable(elem, warningElem, gamedata)
 	let dateStr = date.getDate() + " " + months[date.getMonth()] + " " + date.getFullYear()
 	
 	let raceStr = ""
-	let raceScores = [0, 1, 4, 0, 11, 0, 22, 0, 39, 48, 58, 69, 82]
 	let totalScore = clans.reduce((accum, clan) => accum + clan.scoreWithoutPenalties, 0)
-	warningElem.innerHTML += "Total Points: " + totalScore
+	totalElem.innerHTML = "Total Points: " + totalScore
 	
 	let raceNum = totalScore / raceScores[players.length]
 	if (gamedata.gamemode == "mk8d")
 	{
-		if (raceScores[players.length] > 0 && Math.floor(raceNum) == raceNum)
-			raceStr = "    •    " + Math.floor(raceNum) + " race" + (raceNum > 1 ? "s" : "")
-		else
+		if (raceScores[players.length] > 0)
 		{
-			warningElem.innerHTML += "<br>⚠ Doesn't look like a proper result! Did someone disconnect? ⚠"
-			flashWarning()
+			if (Math.floor(raceNum) == raceNum)
+				raceStr = "    •    " + Math.floor(raceNum) + " race" + (raceNum > 1 ? "s" : "")
+			else
+			{
+				let nextWholeRaceNum = Math.ceil(raceNum)
+				let missingPoints = (raceScores[players.length] * nextWholeRaceNum) - totalScore
+				
+				warningElem.innerHTML =
+					"<br>⚠ Doesn't look like a proper result! Did someone disconnect? ⚠<br>" +
+					"(Missing " + missingPoints + " point" + (missingPoints > 1 ? "s" : "") + " for " + nextWholeRaceNum + " race" + (nextWholeRaceNum > 1 ? "s" : "") + ")"
+					
+				flashWarning()
+			}
 		}
 	}
 	

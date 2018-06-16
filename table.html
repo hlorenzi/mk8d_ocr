@@ -17,7 +17,7 @@
 		<meta charset="UTF-8">
 		<link href="https://fonts.googleapis.com/css?family=Roboto:900&amp;subset=cyrillic,cyrillic-ext,greek,greek-ext,latin-ext" rel="stylesheet">
 		<link href="https://fonts.googleapis.com/css?family=Rubik+Mono+One" rel="stylesheet">
-		<link rel="shortcut icon" type="image/png" href="favicon.png"/>
+		<link rel="shortcut icon" type="image/png" href="favicon2.png"/>
 	</head>
 	
 	<style>
@@ -55,6 +55,23 @@
 			background-color: white;
 			font-size: 1.5em;
 		}
+		
+		#tableTotals
+		{
+			margin: auto;
+		}
+		
+		#tableTotals td
+		{
+			margin: auto;
+			border-top: 1px solid #da8;
+			border-bottom: 1px solid #da8;
+			padding: 1em;
+			padding-top: 2px;
+			padding-bottom: 2px;
+			border-collapse: collapse;
+			text-align: center;
+		}
 	</style>
 	
 	<body onload="main(); setup(); queueRefresh()" style="text-align:center;">
@@ -72,13 +89,14 @@
 							<button onclick="handleConvertSyntax()">Convert Syntax</button>
 						</td>
 						<td>
+							<span>Right-click and select "Copy Image" to share!</span>
+							<br>
 							<canvas id="canvasTable" width="860" height="520" style="display:none;"></canvas>
 							<div id="divTable">
 								<img id="imgTable"></img>
 							</div>
+							<span id="spanTotal"></span>
 							<span id="spanWarning"></span>
-							<br>
-							<span>Right-click and select "Copy Image" to share!</span>
 						</td>
 					</tr>
 				</table>
@@ -101,6 +119,13 @@
 					<br>
 					<canvas id="canvasInput" width="1280" height="720" style="width:38em; display:none;"></canvas>
 					<div id="divVideo"></div>
+				</div>
+			</td></tr>
+			<tr><td>
+				<div style="background-color:#ffddbb; padding:10px; width:38em; margin:auto; text-align:center;">
+					<span style="font-size:0.75em;">
+						<table id="tableTotals"></table>
+					</span>
 				</div>
 			</td></tr>
 		</table>
