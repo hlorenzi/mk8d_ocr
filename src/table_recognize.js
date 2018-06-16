@@ -160,6 +160,7 @@ function recognizeImage(workers, table, img)
 	for (let i = 0; i < 12; i++)
 		recognizedPlayers.push({ name: null, score: null, flag: null })
 	
+	warningCanFlash = false
 	refreshInputData()
 	
 	img = img.stretchTo(1280, 720)
@@ -185,14 +186,15 @@ function recognizeImage(workers, table, img)
 				case "flag":  recognizedPlayers[index].flag  = ev.data.flag; break
 			}
 			
-			refreshInputData()
-			
 			if (doneNum == 12 * 3)
 			{
+				warningCanFlash = true
 				working = false
 				for (let worker of workers)
 					worker.terminate()
 			}
+			
+			refreshInputData()
 		}
 	}
 	

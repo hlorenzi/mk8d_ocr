@@ -1,5 +1,6 @@
 let refreshTimeout = null
 let warningFlashTimeout = null
+let warningCanFlash = false
 
 
 function main()
@@ -75,8 +76,11 @@ function clearWarning()
 }
 
 
-function flashWarning(remaining = 16)
+function flashWarning(remaining = 10)
 {
+	if (!warningCanFlash)
+		remaining = 0
+	
 	let warning = document.getElementById("spanWarning")
 	
 	warning.style.backgroundColor = (remaining % 2 == 1) ? "white" : "red"
@@ -89,6 +93,8 @@ function flashWarning(remaining = 16)
 		
 		warningFlashTimeout = setTimeout(() => flashWarning(remaining - 1), 100)
 	}
+	else
+		warningCanFlash = false
 }
 
 
