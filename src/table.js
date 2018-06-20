@@ -293,34 +293,49 @@ function parseData(str)
 				players.push(playerData)
 		}
 		
-		let clanTags = extractClans(players)
-		
-		let clans = []
-		for (let clanTag of clanTags)
-			clans.push({ tag: clanTag, name: null, players: [], bonuses: 0 })
-		
-		for (let player of players)
+		let assignmentAttempts = []
+		for (let i = 0; i < 10; i++)
 		{
-			let clan = clans.find(c => player.name.startsWith(c.tag))
-			if (clan == null)
-			{
-				clan = clans.find(c => c.tag == null)
-				if (clan == null)
-				{
-					clan = { tag: null, name: null, players: [], bonuses: 0 }
-					clans.push(clan)
-				}
-			}
-			
-			if (clan.tag != null)
-				player.name = trimSeparatorsStart(player.name.substr(clan.tag.length).trim())
-			
-			clan.players.push(player)
+			let clanTags = extractClans(players, i)
+			assignmentAttempts.push({ clanTags, clans: assignPlayersToExtractedClans(clanTags, players) })
 		}
 		
-		clans = clans.filter(clan => clan.players.length > 0)
+		let bestAssignmentScore = -100000
+		let bestAttempt = assignmentAttempts[0]
+		//console.log("== attempts ==")
+		for (let attempt of assignmentAttempts)
+		{
+			let assignmentScore = 0
+			
+			assignmentScore += attempt.clans.length
+			
+			if (attempt.clans.length > 0)
+			{
+				let allSame = true
+				let playersInClan0 = attempt.clans[0].players.length
+				attempt.clans.forEach(clan => allSame &= (clan.players.length == playersInClan0))
+				
+				if (allSame)
+					assignmentScore += 10
+			}
+			
+			let clanWithoutTag = attempt.clans.find(clan => clan.tag == null)
+			if (clanWithoutTag)
+				assignmentScore -= clanWithoutTag.players.length
+			
+			//console.log(assignmentScore)
+			//console.log(attempt.clanTags)
+			//console.log(attempt.clans)
+			//console.log(";")
+			
+			if (assignmentScore > bestAssignmentScore)
+			{
+				bestAssignmentScore = assignmentScore
+				bestAttempt = attempt
+			}
+		}
 		
-		return { gamemode, clans }
+		return { gamemode, clans: bestAttempt.clans }
 	}
 }
 
@@ -381,7 +396,7 @@ function parsePlayer(str)
 }
 
 
-function extractClans(players)
+function extractClans(players, minLength)
 {
 	let clans = []
 	
@@ -394,12 +409,12 @@ function extractClans(players)
 			
 			let suffix = commonSuffix(players[p].name, players[q].name).trim()
 			
-			if (suffix.length > 0 && clans.findIndex(c => c == suffix) < 0)
+			if (suffix.length > minLength && clans.findIndex(c => c == suffix) < 0)
 				clans.push(suffix)
 		}
 	}
 	
-	while (true)
+	/*while (true)
 	{
 		let changed = false
 		for (let p = 0; p < clans.length && !changed; p++)
@@ -422,10 +437,65 @@ function extractClans(players)
 	}
 	
 	if (clans.length > 6)
-		clans.splice(6, clans.length - 6)
+		clans.splice(6, clans.length - 6)*/
 	
 	clans = clans.map(c => trimSeparatorsEnd(c.trim()))
 	
+	return clans
+}
+
+
+function assignPlayersToExtractedClans(clanTags, players)
+{
+	let clans = []
+	for (let clanTag of clanTags)
+		clans.push({ tag: clanTag, name: null, players: [], bonuses: 0 })
+	
+	for (let clan of clans)
+	{
+		clan.possiblePlayersWithTag = 0
+		players.forEach(p =>
+		{
+			if (p.name.startsWith(clan.tag))
+				clan.possiblePlayersWithTag += 1
+		})
+		
+		//console.log("[" + clan.tag + "] possible players: " + clan.possiblePlayersWithTag)
+	}
+	
+	for (let player of players)
+	{
+		let clan = null
+		
+		let biggestRoster = 0
+		for (let c of clans.filter(c => player.name.startsWith(c.tag)))
+		{
+			if (c.possiblePlayersWithTag > biggestRoster)
+			{
+				biggestRoster = c.possiblePlayersWithTag
+				clan = c
+			}
+		}
+		
+		if (clan == null)
+		{
+			clan = clans.find(c => c.tag == null)
+			if (clan == null)
+			{
+				clan = { tag: null, name: null, players: [], bonuses: 0 }
+				clans.push(clan)
+			}
+		}
+		
+		let playerClone = Object.assign({}, player)
+		
+		if (clan.tag != null)
+			playerClone.name = trimSeparatorsStart(playerClone.name.substr(clan.tag.length).trim())
+		
+		clan.players.push(playerClone)
+	}
+	
+	clans = clans.filter(clan => clan.players.length > 0)
 	return clans
 }
 
