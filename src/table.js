@@ -376,6 +376,12 @@ function parsePlayer(str)
 	}
 	
 	let gpScoresStr = matches[2].split("|").map(s => s.trim().match(/((?:\+?|-)[0-9]+)/g))
+	if (gpScoresStr == null)
+		return null
+	
+	for (let gpScore of gpScoresStr)
+		if (gpScore == null)
+			return null
 	
 	let gpScores = gpScoresStr.map(s => s.reduce((accum, x) =>
 	{
@@ -578,6 +584,8 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 	if (SCORE_COLUMNS > 1)
 		SCORE_COLUMNS += 1
 	
+	let showClanRanks = (clans.length > 1)
+	
 	let TOTAL_WIDTH = 860 + 40 * (SCORE_COLUMNS - 1)
 	let TOTAL_HEIGHT = 520
 	
@@ -592,7 +600,12 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 	let COLUMNS = 56 + SCORE_COLUMNS * 4
 	let COLUMN = TOTAL_WIDTH / COLUMNS
 	
-	let CLAN_NAME_WIDTH = COLUMN * 20
+	let CLAN_RANK_WIDTH = (showClanRanks ? COLUMN * 4 : 0)
+	let CLAN_RANK_ICON_WIDTH = CLAN_RANK_WIDTH * 0.8
+	let CLAN_RANK_X = x + CLAN_RANK_WIDTH / 2
+	x += CLAN_RANK_WIDTH
+	
+	let CLAN_NAME_WIDTH = (showClanRanks ? COLUMN * 16 : COLUMN * 20)
 	let CLAN_NAME_X = x + CLAN_NAME_WIDTH / 2
 	x += CLAN_NAME_WIDTH
 	
@@ -744,6 +757,15 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 	if (!allRanksLoaded)
 		queueRefresh()
 	
+	// Calculate clan rankings
+	for (let p = 0; p < clans.length; p++)
+	{
+		if (p > 0 && clans[p].score == clans[p - 1].score)
+			clans[p].ranking = clans[p - 1].ranking
+		else
+			clans[p].ranking = p + 1
+	}
+	
 	// Calculate player rankings
 	let lowestRanking = 1
 	for (let p = 0; p < players.length; p++)
@@ -838,6 +860,28 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 	
 	ctx.fillText(dateStr + raceStr, TOTAL_WIDTH / 2, HEADER_HEIGHT / 2, TOTAL_WIDTH)
 	
+	let calcClanTagSize = (clan) => Math.floor(Math.min(clan.h * 1.5, CLAN_SCORE_WIDTH * 0.35))
+	let calcClanScoreSize = (clan) => Math.floor(Math.min(clan.h * 1.5, CLAN_SCORE_WIDTH * 0.35))
+	
+	// Get clan tag widths
+	let maxClanTagWidth = 0
+	for (let clan of clans)
+	{
+		ctx.save()
+		ctx.font = calcClanTagSize(clan) + "px Roboto"
+		ctx.textAlign = "center"
+		ctx.textBaseline = "middle"
+		ctx.fillStyle = "#000000"
+		
+		clan.tagWidth = 0
+		
+		if (clan.tag != null)
+			clan.tagWidth = Math.min(ctx.measureText(clan.tag).width, CLAN_NAME_WIDTH - 20)
+		
+		maxClanTagWidth = Math.max(maxClanTagWidth, clan.tagWidth)
+		ctx.restore()
+	}
+	
 	// Draw clans
 	for (let clan of clans)
 	{
@@ -864,30 +908,59 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 		}
 		ctx.restore()
 		
-		let clanTagSize = Math.floor(Math.min(clan.h * 1.5, CLAN_NAME_WIDTH * 0.35))
-		ctx.font = clanTagSize + "px Rubik Mono One"
-		ctx.textAlign = "center"
-		ctx.textBaseline = "middle"
-		ctx.fillStyle = "#000000"
 		
 		if (clan.h > PLAYER_HEIGHT)
 		{
 			ctx.save()
+			ctx.font = calcClanScoreSize(clan) + "px Rubik Mono One"
+			ctx.textAlign = "center"
+			ctx.textBaseline = "middle"
+			ctx.fillStyle = "#000000"
+			
 			ctx.translate(CLAN_SCORE_X, 0)
 			ctx.scale(0.75, 1)
-			ctx.fillText(clan.score.toString(), 0, clan.h / 2 + clanTagSize * 0.05, CLAN_SCORE_WIDTH - 20)
+			ctx.fillText(clan.score.toString(), 0, clan.h / 2 + calcClanTagSize(clan) * 0.05, CLAN_SCORE_WIDTH - 20)
 			ctx.restore()
 			
-			ctx.font = clanTagSize + "px Roboto"
+			ctx.save()
+			ctx.font = calcClanTagSize(clan) + "px Roboto"
+			ctx.textAlign = "center"
+			ctx.textBaseline = "middle"
+			ctx.fillStyle = "#000000"
 			if (clan.tag != null)
 				ctx.fillText(clan.tag, CLAN_NAME_X, clan.h / 2, CLAN_NAME_WIDTH - 20)
 			
 			if (clan.name != null)
 			{
-				ctx.font = Math.floor(clanTagSize * 0.25) + "px Roboto"
-				ctx.fillText(clan.name, CLAN_NAME_X, clan.h / 2 + clanTagSize * 0.6, CLAN_NAME_WIDTH - 20)
+				ctx.font = Math.floor(calcClanTagSize(clan) * 0.25) + "px Roboto"
+				ctx.fillText(clan.name, CLAN_NAME_X, clan.h / 2 + calcClanTagSize(clan) * 0.6, CLAN_NAME_WIDTH - 20)
+			}
+			ctx.restore()
+			
+			if (showClanRanks)
+			{
+				ctx.save()
+				if (clan.ranking <= 3)
+				{
+					let imgRank = document.getElementById("imgRank" + clan.ranking)
+					if (imgRank != null && imgRank.imgLoaded == true)
+						ctx.drawImage(imgRank, (CLAN_NAME_X - maxClanTagWidth / 2) / 2 - CLAN_RANK_ICON_WIDTH / 2, clan.h / 2 - CLAN_RANK_ICON_WIDTH / 2, CLAN_RANK_ICON_WIDTH, CLAN_RANK_ICON_WIDTH)
+				}
+				else
+				{			
+					let rankStr = clan.ranking + "th"
+					
+					ctx.fillStyle = "#000000"
+					ctx.globalAlpha = 0.6
+					ctx.font = (PLAYER_HEIGHT * 0.65 * 0.6) + "px Roboto"
+					ctx.textAlign = "center"
+					ctx.textBaseline = "middle"
+					ctx.fillText(rankStr, (CLAN_NAME_X - maxClanTagWidth / 2) / 2, clan.h / 2, CLAN_RANK_WIDTH)
+				}
+				ctx.restore()
 			}
 		}
+			
 		
 		for (let p = 0; p < clan.players.length; p++)
 		{
@@ -931,9 +1004,9 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 			{			
 				let rankStr = player.ranking + "th"
 				
-				ctx.fillStyle = (player.ranking >= 15 ? "#660000" : "#000000")
-				ctx.globalAlpha = (player.ranking >= 15 ? 1 : 0.6)
-				ctx.font = "italic " + (PLAYER_HEIGHT * 0.65 * 0.6) + "px Roboto"
+				ctx.fillStyle = "#000000"
+				ctx.globalAlpha = 0.6
+				ctx.font = (PLAYER_HEIGHT * 0.65 * 0.6) + "px Roboto"
 				ctx.fillText(rankStr, PLAYER_RANK_X, PLAYER_HEIGHT / 2, PLAYER_RANK_WIDTH)
 			}
 			ctx.restore()
