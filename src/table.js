@@ -123,6 +123,7 @@ function loadExample1()
 		"Player 4 [ca] 72\n" +
 		"Player 5 [de] 90-10\n" +
 		"Player 6 [ie] 55\n" +
+		"Penalty -10\n" +
 		"\n" +
 		"B\n" +
 		"Player 7 [cl] 70+20+8\n" +
@@ -168,6 +169,7 @@ function loadExample3()
 		"Player 4 [ca] 72|26|79\n" +
 		"Player 5 [de] 90-10|80|54\n" +
 		"Player 6 [ie] 55|38|34\n" +
+		"Penalty -10\n" +
 		"\n" +
 		"B\n" +
 		"Player 7 [cl] 70+20+8|50|62\n" +
@@ -213,7 +215,10 @@ function convertSyntax(str)
 		for (let clan of data.clans)
 		{
 			for (let player of clan.players)
-				converted += clan.tag + " " + player.name + " [" + player.flag + "] " + player.gpScores.join("|") + "\n"
+				converted += clan.tag + " " + player.name + " [" + player.flag + "] " + player.gpScores.join("|") + (player.penalties < 0 ? player.penalties : "") + "\n"
+			
+			if (clan.penalty != 0)
+				converted += clan.tag + " Penalty " + clan.penalty + "\n"
 		}
 	}
 	else
@@ -222,7 +227,10 @@ function convertSyntax(str)
 		{
 			converted += (clan.tag == null ? "-" : clan.tag) + (clan.name == null ? "" : " - " + clan.name) + "\n"
 			for (let player of clan.players)
-				converted += (player.name == null || player.name == "" ? "-" : player.name) + " [" + player.flag + "] " + player.gpScores.join("|") + "\n"
+				converted += (player.name == null || player.name == "" ? "-" : player.name) + " [" + player.flag + "] " + player.gpScores.join("|") + (player.penalties < 0 ? player.penalties : "") + "\n"
+			
+			if (clan.penalty != 0)
+				converted += "Penalty " + clan.penalty + "\n"
 			
 			converted += "\n"
 		}
@@ -279,6 +287,21 @@ function parseData(str)
 			}
 		}
 		
+		clans.forEach(clan =>
+		{
+			let penalties = 0
+			for (let i = clan.players.length - 1; i >= 0; i--)
+			{
+				if (clan.players[i].totalScore <= 0 && clan.players[i].name.toLowerCase() == "penalty")
+				{
+					penalties += clan.players[i].totalScore
+					clan.players.splice(i, 1)
+				}
+			}
+			
+			clan.penalty = penalties
+		})
+		
 		return { gamemode, clans }
 	}
 	else
@@ -334,6 +357,21 @@ function parseData(str)
 				bestAttempt = attempt
 			}
 		}
+		
+		bestAttempt.clans.forEach(clan =>
+		{
+			let penalties = 0
+			for (let i = clan.players.length - 1; i >= 0; i--)
+			{
+				if (clan.players[i].totalScore <= 0 && clan.players[i].name.toLowerCase() == "penalty")
+				{
+					penalties += clan.players[i].totalScore
+					clan.players.splice(i, 1)
+				}
+			}
+			
+			clan.penalty = penalties
+		})
 		
 		return { gamemode, clans: bestAttempt.clans }
 	}
@@ -584,17 +622,21 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 	if (SCORE_COLUMNS > 1)
 		SCORE_COLUMNS += 1
 	
+	let STANDARD_HEIGHT = 520
+	let ROW_NUM = clans.reduce((accum, clan) => accum + clan.players.length, 0)
+	let CLAN_PENALTY_ROW_NUM = clans.reduce((accum, clan) => accum + (clan.penalty != 0 ? 1 : 0), 0)
+	
 	let showClanRanks = (clans.length > 1)
 	
+	let HEADER_HEIGHT = STANDARD_HEIGHT / 13
+	let CLAN_MARGIN_HEIGHT = STANDARD_HEIGHT / 13 / 2
+	let PLAYER_HEIGHT = STANDARD_HEIGHT / 14
+	
 	let TOTAL_WIDTH = 860 + 40 * (SCORE_COLUMNS - 1)
-	let TOTAL_HEIGHT = 520
+	let TOTAL_HEIGHT = STANDARD_HEIGHT + (Math.max(12, ROW_NUM + CLAN_PENALTY_ROW_NUM) - 12) * PLAYER_HEIGHT
 	
 	elem.width = TOTAL_WIDTH
 	elem.height = TOTAL_HEIGHT
-	
-	let HEADER_HEIGHT = TOTAL_HEIGHT / 13
-	let CLAN_MARGIN_HEIGHT = TOTAL_HEIGHT / 13 / 2
-	let PLAYER_HEIGHT = TOTAL_HEIGHT / 14
 	
 	let x = 0
 	let COLUMNS = 56 + SCORE_COLUMNS * 4
@@ -643,10 +685,10 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 	let PLAYER_PENALTY_X = x + (PLAYER_COLUMN * 3) - PLAYER_COLUMN * 1.5
 	
 	// Calculate and sort clan scores
-	clans.map(clan => Object.assign(clan, { score: clan.players.reduce((accum, p) => accum + p.totalScore, 0) }))
+	clans.map(clan => Object.assign(clan, { score: clan.players.reduce((accum, p) => accum + p.totalScore, 0) + clan.penalty }))
 	clans.map(clan => Object.assign(clan, { scoreWithoutPenalties: clan.players.reduce((accum, p) => accum + p.totalScoreWithoutPenalties, 0) }))
 	clans.sort((a, b) => b.score - a.score)
-	clans.forEach(clan => clan.players.sort((a, b) => b.totalScore - a.totalScore))
+	clans.forEach(clan => clan.players.sort((a, b) => b.totalScoreWithoutPenalties - a.totalScoreWithoutPenalties))
 	
 	// Calculate clan colors
 	let unusedHues =
@@ -779,7 +821,7 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 	}
 	
 	// Calculate layout
-	clans.forEach(clan => clan.h = Math.max(1, clan.players.length) * PLAYER_HEIGHT)
+	clans.forEach(clan => clan.h = Math.max(1, clan.players.length + (clan.penalty != 0 ? 1 : 0)) * PLAYER_HEIGHT)
 	
 	let h = clans.reduce((accum, clan) => accum + clan.h, 0)
 	
@@ -909,7 +951,7 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 		ctx.restore()
 		
 		
-		if (clan.h > PLAYER_HEIGHT)
+		if (clan.players.length > 1)//(clan.h > PLAYER_HEIGHT)
 		{
 			ctx.save()
 			ctx.font = calcClanScoreSize(clan) + "px Rubik Mono One"
@@ -952,7 +994,7 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 					
 					ctx.fillStyle = "#000000"
 					ctx.globalAlpha = 0.6
-					ctx.font = (PLAYER_HEIGHT * 0.65 * 0.6) + "px Roboto"
+					ctx.font = (PLAYER_HEIGHT * 0.95 * 0.6) + "px Roboto"
 					ctx.textAlign = "center"
 					ctx.textBaseline = "middle"
 					ctx.fillText(rankStr, (CLAN_NAME_X - maxClanTagWidth / 2) / 2, clan.h / 2, CLAN_RANK_WIDTH)
@@ -967,7 +1009,7 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 			let player = clan.players[p]
 			
 			ctx.save()
-			ctx.translate(PLAYER_X, clan.h / 2 + (-clan.players.length / 2 + p) * PLAYER_HEIGHT)
+			ctx.translate(PLAYER_X, clan.h / 2 + (-clan.players.length / 2 + p - (clan.penalty != 0 ? 0.5 : 0)) * PLAYER_HEIGHT)
 			
 			ctx.save()
 			ctx.fillStyle = rgbToHex(hsvToRgb(clan.hue, clan.saturation, 0.6))
@@ -1060,7 +1102,7 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 			ctx.scale(0.75, 1)
 			ctx.font = (PLAYER_HEIGHT * 0.65) + "px Rubik Mono One"
 			ctx.fillStyle = "#000000"
-			ctx.fillText(player.totalScore.toString(), 0, PLAYER_HEIGHT / 2 + 2, PLAYER_SCORE_WIDTH)
+			ctx.fillText(player.totalScoreWithoutPenalties.toString(), 0, PLAYER_HEIGHT / 2 + 2, PLAYER_SCORE_WIDTH)
 			ctx.restore()
 			
 			if (player.penalties < 0)
@@ -1074,6 +1116,40 @@ function drawTable(elem, totalElem, warningElem, gamedata)
 				ctx.fillText("(" + player.penalties.toString() + ")", 0, PLAYER_HEIGHT / 2 + 2, PLAYER_PENALTY_WIDTH)
 				ctx.restore()
 			}
+			
+			ctx.restore()
+		}
+		
+		if (clan.penalty != 0)
+		{
+			ctx.save()
+			ctx.translate(PLAYER_X, clan.h / 2 + (clan.players.length / 2 - (clan.penalty != 0 ? 0.5 : 0)) * PLAYER_HEIGHT)
+			
+			ctx.save()
+			ctx.fillStyle = rgbToHex(hsvToRgb(clan.hue, clan.saturation, 0.6))
+			ctx.globalAlpha = 0.4
+			ctx.roundRect(30, 2 + 5, PLAYER_WIDTH - 60, PLAYER_HEIGHT - 10, 5)
+			ctx.fill()
+			ctx.restore()
+			
+			ctx.font = (PLAYER_HEIGHT * 0.45) + "px Roboto"
+			ctx.textBaseline = "middle"
+			ctx.fillStyle = "#000000"
+			ctx.textAlign = "center"
+			
+			ctx.save()
+			ctx.translate(PLAYER_NAME_X, 0)
+			ctx.scale(0.95, 1)
+			ctx.fillText("Penalty", 0, PLAYER_HEIGHT / 2 + 2, PLAYER_NAME_WIDTH)
+			ctx.restore()
+			
+			ctx.save()
+			ctx.translate(PLAYER_SCORE_X + PLAYER_SCORE_WIDTH * (SCORE_COLUMNS - 1), 0)
+			ctx.scale(0.7, 1)
+			ctx.font = (PLAYER_HEIGHT * 0.45) + "px Rubik Mono One"
+			ctx.fillStyle = "#000000"
+			ctx.fillText(clan.penalty.toString(), 0, PLAYER_HEIGHT / 2 + 2 + 2, PLAYER_SCORE_WIDTH)
+			ctx.restore()
 			
 			ctx.restore()
 		}
