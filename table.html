@@ -80,55 +80,62 @@
 			padding: 0;
 			border: 0;
 			width: 100%;
-			background-color: #ffeeee;
+			background-color: #ccccff;
 			text-align: center;
 			color: black;
 		}
 		
 		#divGameAd:hover
 		{
-			background-color: #ffdddd;
+			background-color: #bbbbff;
 			cursor: pointer;
 		}
 		
 		.adName
 		{
 			font-size: 1.5em;
-			color: #bb0000
+			color: #0000bb
 		}
 		
 		.adDate
 		{
-			font-size: 1.25em;
-			color: #883300
+			font-size: 1.5em;
+			color: #003388;
+			text-shadow:
+				-3px -3px 3px #fff,  
+				3px -3px 3px #fff,
+				-3px 3px 3px #fff,
+				3px 3px 3px #fff;
 		}
 	</style>
 	
 	<body onload="main(); setup(); queueRefresh()" style="text-align:center; margin:0; margin-bottom:1em;">
-		<a href="https://www.youtube.com/watch?v=kR7X8K8j6QM" target="_blank" style="text-decoration: none;">
-			<div id="divGameAd">
-				<table style="margin-left:auto; margin-right:auto; padding:0;">
-					<tr style="padding:0;"><td style="padding:0;">
-						<img src="assets/ninjin.png"></img>
-					</td><td style="padding:0;">
-						Check out my new game, <span class="adName">Ninjin: Clash of Carrots!</span>
-						<br>
-						Single, Local & Online Co-op
-						<br>
-						Coming <span class="adDate">September 4</span>
-						<br>
-						PC /
-						<img src="https://seeklogo.com/images/N/nintendo-switch-logo-38D4F5C7E7-seeklogo.com.png" style="width:1em; position:relative; top:0.1em;"></img> Nintendo Switch /
-						<img src="https://logodownload.org/wp-content/uploads/2017/05/playstation-4-logo-ps4-6.png" style="width:1em; position:relative; top:0.05em;"></img> PS4 /
-						<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Xbox_one_logo.svg/1024px-Xbox_one_logo.svg.png" style="width:1em; position:relative; top:0.1em;"></img> Xbox One
-					</td><td style="padding:0;">
-						<img src="assets/akai.png"></img>
-					</td></tr>
-				</table>
-			</div>
-		</a>
-		
 		<table style="margin:auto;">
+			<tr style="width:100vw;"><td style="width:100vw;">
+				<a href="https://www.youtube.com/watch?v=ecx0jw-1FcA" target="_blank" style="text-decoration: none;">
+					<div id="divGameAd">
+						<table style="margin-left:auto; margin-right:auto; padding:0;">
+							<tr style="padding:0;"><td style="padding:0;">
+								<img src="assets/ninjin.png"></img>
+							</td><td style="padding:0;">
+								Check out my new game, <span class="adName">Ninjin: Clash of Carrots!</span>
+								<br>
+								Single, Local & Online Co-op
+								<br>
+								<span class="adDate">OUT NOW!</span>
+								<br>
+								Steam /
+								<img src="https://seeklogo.com/images/N/nintendo-switch-logo-38D4F5C7E7-seeklogo.com.png" style="width:1em; position:relative; top:0.1em;"></img> Nintendo Switch /
+								<img src="https://logodownload.org/wp-content/uploads/2017/05/playstation-4-logo-ps4-6.png" style="width:1em; position:relative; top:0.05em;"></img> PS4 /
+								<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Xbox_one_logo.svg/1024px-Xbox_one_logo.svg.png" style="width:1em; position:relative; top:0.1em;"></img> Xbox One
+							</td><td style="padding:0;">
+								<img src="assets/akai.png"></img>
+							</td></tr>
+						</table>
+					</div>
+				</a>
+			</td></tr>
+		
 			<tr><td>
 				<table style="margin:auto;">
 					<tr>
@@ -138,6 +145,7 @@
 							<button onclick="loadExample1()">Load Example</button>
 							<button onclick="loadExample2()">Load FFA Example</button>
 							<button onclick="loadExample3()">Load 3-GP Example</button>
+							<br>
 							<br>
 							<button onclick="handleConvertSyntax()">Split/Join Clan Tags</button>
 						</td>
