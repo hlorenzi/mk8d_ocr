@@ -998,7 +998,7 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 			if (clan.name != null)
 			{
 				ctx.font = "900 " + Math.floor(calcClanTagSize(clan) * 0.25) + "px Roboto"
-				ctx.fillText(clan.name, CLAN_NAME_X, clan.h / 2 + calcClanTagSize(clan) * 0.6, CLAN_NAME_WIDTH - 20)
+				ctx.fillText(clan.name, CLAN_NAME_X, clan.h / 2 + calcClanTagSize(clan) * 0.8, CLAN_NAME_WIDTH - 20)
 			}
 			ctx.restore()
 			
