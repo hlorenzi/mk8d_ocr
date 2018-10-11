@@ -6,6 +6,9 @@ let warningCanFlash = false
 let raceScores = [0, 1, 4, 0, 11, 0, 22, 0, 39, 48, 58, 69, 82]
 
 
+const needsPngFlags = (navigator.userAgent.toLowerCase().indexOf("firefox") > -1)
+
+
 const STYLE_DEFAULT = 0
 const STYLE_MKU = 1
 
@@ -686,7 +689,7 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 	x += PLAYER_NAME_WIDTH
 	
 	let PLAYER_FLAG_WIDTH = PLAYER_COLUMN * 3
-	let PLAYER_FLAG_ICON_WIDTH = PLAYER_HEIGHT * 0.6 * (4 / 3)
+	let PLAYER_FLAG_ICON_WIDTH = PLAYER_HEIGHT * 0.6 * (needsPngFlags ? (4.25 / 3) : (4 / 3))
 	let PLAYER_FLAG_ICON_HEIGHT = PLAYER_HEIGHT * 0.6
 	let PLAYER_FLAG_X = x + PLAYER_FLAG_WIDTH / 2
 	x += PLAYER_FLAG_WIDTH
@@ -794,7 +797,10 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 			let src = player.flag.toLowerCase()
 			if (src == "uk") src = "gb"
 			
-			allFlagsLoaded &= loadImage("imgFlag_" + player.flag.toLowerCase(), "https://lipis.github.io/flag-icon-css/flags/4x3/" + src + ".svg")
+			allFlagsLoaded &= loadImage("imgFlag_" + player.flag.toLowerCase(),
+				needsPngFlags ?
+				("https://raw.githubusercontent.com/hjnilsson/country-flags/master/png100px/" + src + ".png") :
+				("https://lipis.github.io/flag-icon-css/flags/4x3/" + src + ".svg"))
 		}
 	}
 	
@@ -1082,6 +1088,7 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 				if (flagElem != null && flagElem.imgLoaded == true)
 				{
 					ctx.fillRect(PLAYER_FLAG_X - PLAYER_FLAG_ICON_WIDTH / 2 - 2, PLAYER_HEIGHT / 2 - PLAYER_FLAG_ICON_HEIGHT / 2 - 2, PLAYER_FLAG_ICON_WIDTH + 4, PLAYER_FLAG_ICON_HEIGHT + 4)
+					ctx.fillStyle = "#ffffff"
 					ctx.drawImage(flagElem, PLAYER_FLAG_X - PLAYER_FLAG_ICON_WIDTH / 2, PLAYER_HEIGHT / 2 - PLAYER_FLAG_ICON_HEIGHT / 2, PLAYER_FLAG_ICON_WIDTH, PLAYER_FLAG_ICON_HEIGHT)
 				}
 			}
@@ -1263,7 +1270,7 @@ function drawTableMKU(elem, totalElem, warningElem, gamedata)
 	x += PLAYER_NAME_WIDTH
 	
 	let PLAYER_FLAG_WIDTH = PLAYER_COLUMN * 3
-	let PLAYER_FLAG_ICON_WIDTH = PLAYER_HEIGHT * 0.6 * (4 / 3)
+	let PLAYER_FLAG_ICON_WIDTH = PLAYER_HEIGHT * 0.6 * (needsPngFlags ? (4.25 / 3) : (4 / 3))
 	let PLAYER_FLAG_ICON_HEIGHT = PLAYER_HEIGHT * 0.6
 	let PLAYER_FLAG_X = x + PLAYER_FLAG_WIDTH / 2
 	x += PLAYER_FLAG_WIDTH
@@ -1343,7 +1350,10 @@ function drawTableMKU(elem, totalElem, warningElem, gamedata)
 			let src = player.flag.toLowerCase()
 			if (src == "uk") src = "gb"
 			
-			allFlagsLoaded &= loadImage("imgFlag_" + player.flag.toLowerCase(), "https://lipis.github.io/flag-icon-css/flags/4x3/" + src + ".svg")
+			allFlagsLoaded &= loadImage("imgFlag_" + player.flag.toLowerCase(),
+				needsPngFlags ?
+				("https://raw.githubusercontent.com/hjnilsson/country-flags/master/png100px/" + src + ".png") :
+				("https://lipis.github.io/flag-icon-css/flags/4x3/" + src + ".svg"))
 		}
 	}
 	
