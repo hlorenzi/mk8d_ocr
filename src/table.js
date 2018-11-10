@@ -11,6 +11,7 @@ const needsPngFlags = (navigator.userAgent.toLowerCase().indexOf("firefox") > -1
 
 const STYLE_DEFAULT = 0
 const STYLE_MKU = 1
+const STYLE_200L = 2
 
 
 function main()
@@ -55,8 +56,10 @@ function refreshFromData()
 	img.style.opacity = 1
 	
 	let style = STYLE_DEFAULT
-	if (getURLQueryParameter("style") == "mku")
+	if (getURLQueryParameter("style").toLowerCase() == "mku")
 		style = STYLE_MKU
+	else if (getURLQueryParameter("style").toLowerCase() == "200l")
+		style = STYLE_200L
 	
 	drawTable(canvas, spanTotal, spanWarning, parseData(textarea.value), style)
 	
@@ -627,6 +630,7 @@ function drawTable(elem, totalElem, warningElem, gamedata, style = STYLE_DEFAULT
 	{
 		case STYLE_DEFAULT: drawTableDefault(elem, totalElem, warningElem, gamedata); break
 		case STYLE_MKU: drawTableMKU(elem, totalElem, warningElem, gamedata); break
+		case STYLE_200L: drawTable200L(elem, totalElem, warningElem, gamedata); break
 	}
 }
 
@@ -1479,6 +1483,538 @@ function drawTableMKU(elem, totalElem, warningElem, gamedata)
 	let imgRank = document.getElementById("imgRank1")
 	if (imgRank != null && imgRank.imgLoaded == true)
 		ctx.drawImage(imgRank, 50, HEADER_HEIGHT / 2 - 32 / 2, 53, 32)
+
+	let calcClanTagSize = (clan) => Math.floor(Math.min(clan.h * 1.5, CLAN_SCORE_WIDTH * 0.35))
+	let calcClanScoreSize = (clan) => Math.floor(Math.min(clan.h * 1.5, CLAN_SCORE_WIDTH * 0.35))
+	
+	// Get clan tag widths
+	let maxClanTagWidth = 0
+	for (let clan of clans)
+	{
+		ctx.save()
+		ctx.font = "300 " + calcClanTagSize(clan) + "px Roboto"
+		ctx.textAlign = "center"
+		ctx.textBaseline = "middle"
+		ctx.fillStyle = "#000000"
+		
+		clan.tagWidth = 0
+		
+		if (clan.tag != null)
+			clan.tagWidth = Math.min(ctx.measureText(clan.tag).width, CLAN_NAME_WIDTH - 20)
+		
+		maxClanTagWidth = Math.max(maxClanTagWidth, clan.tagWidth)
+		ctx.restore()
+	}
+	
+	// Draw clans
+	for (let clan of clans)
+	{
+		ctx.save()
+		ctx.translate(0, clan.y)
+		
+		ctx.fillStyle = "#111"
+		ctx.fillRect(0, -CLAN_MARGIN_HEIGHT, TOTAL_WIDTH, clan.h + 1 + CLAN_MARGIN_HEIGHT * 2)
+		
+		ctx.save()
+		ctx.fillStyle = "#333"
+		let alternateY = true
+		for (let y = 0; y < clan.h / 2 + CLAN_MARGIN_HEIGHT + 10; y += 10)
+		{
+			alternateY = !alternateY
+			for (let x = alternateY ? 7.5 : 0; x < TOTAL_WIDTH + 10; x += 14)
+			{
+				ctx.globalAlpha = 0.15 * Math.sin(Math.PI * y / clan.h)
+				ctx.beginPath()
+				ctx.arc(x, clan.h / 2 + y, 4, 0, Math.PI * 2)
+				ctx.arc(x, clan.h / 2 - y, 4, 0, Math.PI * 2)
+				ctx.fill()
+			}
+		}
+		ctx.restore()
+		
+		
+		if (clan.players.length > 1)//(clan.h > PLAYER_HEIGHT)
+		{
+			ctx.save()
+			ctx.font = "300 " + calcClanScoreSize(clan) + "px Roboto"
+			ctx.textAlign = "center"
+			ctx.textBaseline = "middle"
+			ctx.fillStyle = clan.fontColor
+			
+			ctx.translate(CLAN_SCORE_X, 0)
+			ctx.fillText(clan.score.toString(), 0, clan.h / 2, CLAN_SCORE_WIDTH - 20)
+			ctx.restore()
+			
+			ctx.save()
+			ctx.font = "300 " + calcClanTagSize(clan) + "px Roboto"
+			ctx.textAlign = "center"
+			ctx.textBaseline = "middle"
+			ctx.fillStyle = clan.fontColor
+			if (clan.tag != null)
+				ctx.fillText(clan.tag, CLAN_NAME_X, clan.h / 2, CLAN_NAME_WIDTH - 20)
+			
+			if (clan.name != null)
+			{
+				ctx.font = "300 " + Math.floor(calcClanTagSize(clan) * 0.25) + "px Roboto"
+				ctx.fillText(clan.name, CLAN_NAME_X, clan.h / 2 + calcClanTagSize(clan) * 0.8, CLAN_NAME_WIDTH - 20)
+			}
+			ctx.restore()
+			
+			if (showClanRanks)
+			{
+				ctx.save()
+				if (clan.ranking <= 3)
+				{
+					let imgRank = document.getElementById("imgRank" + clan.ranking)
+					if (imgRank != null && imgRank.imgLoaded == true)
+						ctx.drawImage(imgRank, (CLAN_NAME_X - maxClanTagWidth / 2) / 2 - CLAN_RANK_ICON_WIDTH / 2, clan.h / 2 - CLAN_RANK_ICON_WIDTH / 2, CLAN_RANK_ICON_WIDTH, CLAN_RANK_ICON_WIDTH)
+				}
+				else
+				{			
+					let rankStr = clan.ranking + "th"
+					
+					ctx.fillStyle = clan.fontColor
+					ctx.globalAlpha = 0.6
+					ctx.font = "300 " + (PLAYER_HEIGHT * 0.95 * 0.6) + "px Roboto"
+					ctx.textAlign = "center"
+					ctx.textBaseline = "middle"
+					ctx.fillText(rankStr, (CLAN_NAME_X - maxClanTagWidth / 2) / 2, clan.h / 2, CLAN_RANK_WIDTH)
+				}
+				ctx.restore()
+			}
+		}
+			
+		
+		for (let p = 0; p < clan.players.length; p++)
+		{
+			let player = clan.players[p]
+			
+			ctx.save()
+			ctx.translate(PLAYER_X, clan.h / 2 + (-clan.players.length / 2 + p - (clan.penalty != 0 ? 0.5 : 0)) * PLAYER_HEIGHT)
+			
+			ctx.save()
+			ctx.fillStyle = "#000"
+			ctx.globalAlpha = 0.4
+			ctx.roundRect(0, 2, PLAYER_WIDTH, PLAYER_HEIGHT - 4, 5)
+			ctx.fill()
+			ctx.restore()
+			
+			ctx.font = "300 " + (PLAYER_HEIGHT * 0.65) + "px Roboto"
+			ctx.textBaseline = "middle"
+			ctx.fillStyle = clan.fontColor
+			ctx.textAlign = "center"
+			
+			ctx.save()
+			ctx.translate(PLAYER_NAME_X, 0)
+			ctx.scale(0.95, 1)
+			ctx.fillText(player.name, 0, PLAYER_HEIGHT / 2, PLAYER_NAME_WIDTH)
+			ctx.restore()
+			
+			ctx.save()
+			{			
+				let rankStr = player.ranking + "th"
+				if (player.ranking == 1) rankStr = "1st"
+				if (player.ranking == 2) rankStr = "2nd"
+				if (player.ranking == 3) rankStr = "3rd"
+				
+				ctx.fillStyle = "#ffffff"
+				ctx.globalAlpha = 1
+				ctx.font = "300 " + (PLAYER_HEIGHT * 0.65 * 0.6) + "px Roboto"
+				ctx.fillText(rankStr, PLAYER_RANK_X, PLAYER_HEIGHT / 2, PLAYER_RANK_WIDTH)
+			}
+			ctx.restore()
+			
+			if (player.flag != null)
+			{
+				let flagElem = document.getElementById("imgFlag_" + player.flag.toLowerCase())
+				if (flagElem != null && flagElem.imgLoaded == true)
+				{
+					//ctx.fillRect(PLAYER_FLAG_X - PLAYER_FLAG_ICON_WIDTH / 2 - 2, PLAYER_HEIGHT / 2 - PLAYER_FLAG_ICON_HEIGHT / 2 - 2, PLAYER_FLAG_ICON_WIDTH + 4, PLAYER_FLAG_ICON_HEIGHT + 4)
+					ctx.drawImage(flagElem, PLAYER_FLAG_X - PLAYER_FLAG_ICON_WIDTH / 2, PLAYER_HEIGHT / 2 - PLAYER_FLAG_ICON_HEIGHT / 2, PLAYER_FLAG_ICON_WIDTH, PLAYER_FLAG_ICON_HEIGHT)
+				}
+			}
+			
+			if (SCORE_COLUMNS > 1)
+			{
+				for (let i = 0; i < player.gpScores.length; i++)
+				{
+					ctx.save()
+					ctx.translate(PLAYER_SCORE_X + PLAYER_SCORE_WIDTH * i, 0)
+					ctx.font = "300 " + (PLAYER_HEIGHT * 0.55) + "px Roboto"
+					ctx.fillStyle = clan.fontColor
+					ctx.globalAlpha = 0.8
+					ctx.fillText(player.gpScores[i].toString(), 0, PLAYER_HEIGHT / 2, PLAYER_SCORE_WIDTH)
+					ctx.restore()
+					
+					if (i > 0)
+					{
+						ctx.save()
+						ctx.fillStyle = "#444"
+						ctx.globalAlpha = 0.3
+						ctx.fillRect(PLAYER_SCORE_X + PLAYER_SCORE_WIDTH * (i - 0.5) - 1, PLAYER_HEIGHT / 2 - PLAYER_HEIGHT * 0.4, 2, PLAYER_HEIGHT * 0.8)
+						ctx.restore()
+					}
+					
+				}
+			}
+			
+			if (SCORE_COLUMNS > 1)
+			{
+				ctx.save()
+				ctx.fillStyle = "#444"
+				ctx.globalAlpha = 0.3
+				ctx.fillRect(PLAYER_SCORE_X + PLAYER_SCORE_WIDTH * (SCORE_COLUMNS - 1 - 0.5) - 1, 2, PLAYER_SCORE_WIDTH, PLAYER_HEIGHT - 4)
+				ctx.restore()
+			}
+			
+			ctx.save()
+			ctx.translate(PLAYER_SCORE_X + PLAYER_SCORE_WIDTH * (SCORE_COLUMNS - 1), 0)
+			ctx.font = "300 " + (PLAYER_HEIGHT * 0.65) + "px Roboto"
+			ctx.fillStyle = clan.fontColor
+			ctx.fillText(player.totalScoreWithoutPenalties.toString(), 0, PLAYER_HEIGHT / 2, PLAYER_SCORE_WIDTH)
+			ctx.restore()
+			
+			if (player.penalties < 0)
+			{
+				ctx.save()
+				ctx.translate(PLAYER_PENALTY_X, 0)
+				ctx.font = "300 " + (PLAYER_HEIGHT * 0.45) + "px Roboto"
+				ctx.fillStyle = clan.fontColor
+				ctx.textAlign = "center"
+				ctx.fillText("(" + player.penalties.toString() + ")", 0, PLAYER_HEIGHT / 2, PLAYER_PENALTY_WIDTH)
+				ctx.restore()
+			}
+			
+			ctx.restore()
+		}
+		
+		if (clan.penalty != 0)
+		{
+			ctx.save()
+			ctx.translate(PLAYER_X, clan.h / 2 + (clan.players.length / 2 - (clan.penalty != 0 ? 0.5 : 0)) * PLAYER_HEIGHT)
+			
+			ctx.save()
+			ctx.fillStyle = rgbToHex(hsvToRgb(clan.hue, clan.saturation, 0.6))
+			ctx.globalAlpha = 0.4
+			ctx.roundRect(30, 2 + 5, PLAYER_WIDTH - 60, PLAYER_HEIGHT - 10, 5)
+			ctx.fill()
+			ctx.restore()
+			
+			ctx.font = "300 " + (PLAYER_HEIGHT * 0.45) + "px Roboto"
+			ctx.textBaseline = "middle"
+			ctx.fillStyle = clan.fontColor
+			ctx.textAlign = "center"
+			
+			ctx.save()
+			ctx.translate(PLAYER_NAME_X, 0)
+			ctx.fillText("Penalty", 0, PLAYER_HEIGHT / 2 + 2, PLAYER_NAME_WIDTH)
+			ctx.restore()
+			
+			ctx.save()
+			ctx.translate(PLAYER_SCORE_X + PLAYER_SCORE_WIDTH * (SCORE_COLUMNS - 1), 0)
+			ctx.font = "300 " + (PLAYER_HEIGHT * 0.45) + "px Roboto"
+			ctx.fillStyle = clan.fontColor
+			ctx.fillText(clan.penalty.toString(), 0, PLAYER_HEIGHT / 2 + 2, PLAYER_SCORE_WIDTH)
+			ctx.restore()
+			
+			ctx.restore()
+		}
+		
+		ctx.restore()
+	}
+	
+	for (let c = 0; c < clans.length - 1; c++)
+	{
+		let clan = clans[c]
+		
+		let barY = clan.y + clan.h + CLAN_MARGIN_HEIGHT
+		
+		ctx.fillStyle = "#000"
+		ctx.globalAlpha = 0.5
+		ctx.beginPath()
+		ctx.rect(55, barY - 2, TOTAL_WIDTH - 180, 4)
+		ctx.fill()
+		
+		ctx.globalAlpha = 1
+		
+		ctx.font = "300 " + (PLAYER_HEIGHT * 0.75) + "px Roboto"
+		ctx.textBaseline = "middle"
+		ctx.fillStyle = "#fff"
+		ctx.textAlign = "center"
+		ctx.fillText("±" + (clans[c].score - clans[c + 1].score).toString(), TOTAL_WIDTH - 10 - 80, barY, 60)
+	}
+	
+	ctx.restore()
+}
+
+
+function drawTable200L(elem, totalElem, warningElem, gamedata)
+{
+	clearWarning()
+	warningElem.innerHTML = ""
+	totalElem.innerHTML = ""
+	
+	let clans = gamedata.clans || []
+	
+	let SCORE_COLUMNS = 1
+	clans.forEach(clan => clan.players.forEach(p => SCORE_COLUMNS = Math.max(SCORE_COLUMNS, p.gpScores.length)))
+	if (SCORE_COLUMNS > 1)
+		SCORE_COLUMNS += 1
+	
+	let STANDARD_HEIGHT = 520
+	let ROW_NUM = clans.reduce((accum, clan) => accum + clan.players.length, 0)
+	let CLAN_PENALTY_ROW_NUM = clans.reduce((accum, clan) => accum + (clan.penalty != 0 ? 1 : 0), 0)
+	
+	let showClanRanks = false
+	
+	let HEADER_HEIGHT = STANDARD_HEIGHT / 13
+	let CLAN_MARGIN_HEIGHT = STANDARD_HEIGHT / 13 / 2
+	let PLAYER_HEIGHT = STANDARD_HEIGHT / 14
+	
+	let TOTAL_WIDTH = 860 + 40 * (SCORE_COLUMNS - 1)
+	let TOTAL_HEIGHT = STANDARD_HEIGHT + (Math.max(12, ROW_NUM + CLAN_PENALTY_ROW_NUM) - 12) * PLAYER_HEIGHT
+	
+	elem.width = TOTAL_WIDTH
+	elem.height = TOTAL_HEIGHT
+	
+	let x = 0
+	let COLUMNS = 56 + SCORE_COLUMNS * 4
+	let COLUMN = TOTAL_WIDTH / COLUMNS
+	
+	let CLAN_RANK_WIDTH = (showClanRanks ? COLUMN * 4 : 0)
+	let CLAN_RANK_ICON_WIDTH = CLAN_RANK_WIDTH * 0.8
+	let CLAN_RANK_X = x + CLAN_RANK_WIDTH / 2
+	x += CLAN_RANK_WIDTH
+	
+	let CLAN_NAME_WIDTH = (showClanRanks ? COLUMN * 16 : COLUMN * 20)
+	let CLAN_NAME_X = x + CLAN_NAME_WIDTH / 2
+	x += CLAN_NAME_WIDTH
+	
+	let PLAYER_WIDTH = COLUMN * (COLUMNS - 40)
+	let PLAYER_X = x
+	x += PLAYER_WIDTH
+	
+	let CLAN_SCORE_WIDTH = COLUMN * 20
+	let CLAN_SCORE_X = x + CLAN_SCORE_WIDTH / 2
+	
+	let PLAYER_COLUMNS = 16 + 4 * SCORE_COLUMNS
+	let PLAYER_COLUMN = PLAYER_WIDTH / PLAYER_COLUMNS
+	x = 0
+	
+	let PLAYER_NAME_WIDTH = PLAYER_COLUMN * 10
+	let PLAYER_NAME_X = x + PLAYER_NAME_WIDTH / 2
+	x += PLAYER_NAME_WIDTH
+	
+	let PLAYER_FLAG_WIDTH = PLAYER_COLUMN * 3
+	let PLAYER_FLAG_ICON_WIDTH = PLAYER_HEIGHT * 0.6 * (needsPngFlags ? (4.25 / 3) : (4 / 3))
+	let PLAYER_FLAG_ICON_HEIGHT = PLAYER_HEIGHT * 0.6
+	let PLAYER_FLAG_X = x + PLAYER_FLAG_WIDTH / 2
+	x += PLAYER_FLAG_WIDTH
+	
+	let PLAYER_SCORE_WIDTH = PLAYER_COLUMN * 4// PLAYER_WIDTH / PLAYER_SUBDIV * (4 * SCORE_COLUMNS)
+	let PLAYER_SCORE_X = x + PLAYER_SCORE_WIDTH / 2// PLAYER_WIDTH / PLAYER_SUBDIV * (13.5 + (2 * SCORE_COLUMNS))
+	x += PLAYER_SCORE_WIDTH * SCORE_COLUMNS
+	
+	let PLAYER_RANK_WIDTH = PLAYER_COLUMN * 3
+	let PLAYER_RANK_X = x + PLAYER_RANK_WIDTH / 2
+	let PLAYER_RANK_ICON_WIDTH = PLAYER_HEIGHT * 0.8
+	x += PLAYER_RANK_WIDTH
+	
+	let PLAYER_PENALTY_WIDTH = PLAYER_COLUMN * 3.1
+	let PLAYER_PENALTY_X = x + (PLAYER_COLUMN * 3) - PLAYER_COLUMN * 1.5
+	
+	// Calculate and sort clan scores
+	clans.map(clan => Object.assign(clan, { score: clan.players.reduce((accum, p) => accum + p.totalScore, 0) + clan.penalty }))
+	clans.map(clan => Object.assign(clan, { scoreWithoutPenalties: clan.players.reduce((accum, p) => accum + p.totalScoreWithoutPenalties, 0) }))
+	clans.sort((a, b) => b.score - a.score)
+	clans.forEach(clan => clan.players.sort((a, b) => b.totalScoreWithoutPenalties - a.totalScoreWithoutPenalties))
+	
+	// Calculate clan colors
+	for (let c = 0; c < clans.length; c++)
+	{
+		let clan = clans[c]
+		
+		clan.fontColor = c % 2 == 0 ? "#c48651" : "#8e2651"
+	}
+	
+	// Join all players into an array
+	let players = []
+	clans.forEach(clan => clan.players.forEach(player => players.push(player)))
+	players.sort((a, b) => b.totalScore - a.totalScore)
+	
+	let hasAnyFlags = false
+	players.forEach(p => hasAnyFlags |= (p.flag != null && p.flag != ""))
+	
+	if (!hasAnyFlags)
+	{
+		PLAYER_NAME_X += PLAYER_COLUMN * 1.5
+		PLAYER_NAME_WIDTH += PLAYER_COLUMN * 3
+	}
+	
+	// Load flag images
+	let loadImage = (id, src) =>
+	{
+		let img = document.getElementById(id)
+		if (img == null)
+		{
+			allFlagsLoaded = false
+			let img = document.createElement("img")
+			img.setAttribute("crossOrigin", "anonymous")
+			img.id = id
+			img.style.display = "none"
+			img.imgLoaded = false
+			
+			img.onload = () => img.imgLoaded = true
+			img.onerror = () => img.imgLoaded = null
+			
+			img.src = src
+			
+			document.body.appendChild(img)
+			return false
+		}
+		else if (img.imgLoaded == false)
+			return false
+		else
+			return true
+	}
+	
+	let allFlagsLoaded = true
+	for (let player of players)
+	{
+		if (player.flag != null)
+		{
+			let src = player.flag.toLowerCase()
+			if (src == "uk") src = "gb"
+			
+			allFlagsLoaded &= loadImage("imgFlag_" + player.flag.toLowerCase(),
+				needsPngFlags ?
+				("https://raw.githubusercontent.com/hjnilsson/country-flags/master/png100px/" + src + ".png") :
+				("https://lipis.github.io/flag-icon-css/flags/4x3/" + src + ".svg"))
+		}
+	}
+	
+	if (!allFlagsLoaded)
+		queueRefresh()
+	
+	// Load rank images
+	let rankSrcs =
+	[
+		window.location.href.substr(0, window.location.href.lastIndexOf("/")) + "/assets/200l.png"
+	]
+	
+	let allRanksLoaded = true
+	for (let rankSrc of rankSrcs)
+	for (let i = 0; i < rankSrcs.length; i++)
+		allRanksLoaded &= loadImage("imgRank" + (i + 1), rankSrcs[i])
+	
+	if (!allRanksLoaded)
+		queueRefresh()
+	
+	// Calculate clan rankings
+	for (let p = 0; p < clans.length; p++)
+	{
+		if (p > 0 && clans[p].score == clans[p - 1].score)
+			clans[p].ranking = clans[p - 1].ranking
+		else
+			clans[p].ranking = p + 1
+	}
+	
+	// Calculate player rankings
+	let lowestRanking = 1
+	for (let p = 0; p < players.length; p++)
+	{
+		if (p > 0 && players[p].totalScore == players[p - 1].totalScore)
+			players[p].ranking = players[p - 1].ranking
+		else
+			players[p].ranking = p + 1
+		
+		lowestRanking = players[p].ranking
+	}
+	
+	// Calculate layout
+	clans.forEach(clan => clan.h = Math.max(1, clan.players.length + (clan.penalty != 0 ? 1 : 0)) * PLAYER_HEIGHT)
+	
+	let h = clans.reduce((accum, clan) => accum + clan.h, 0)
+	
+	clans.forEach(clan => clan.h += (TOTAL_HEIGHT - HEADER_HEIGHT - h) / clans.length)
+	
+	let y = HEADER_HEIGHT
+	for (let clan of clans)
+	{
+		clan.y = y + CLAN_MARGIN_HEIGHT
+		y += clan.h
+		clan.h -= CLAN_MARGIN_HEIGHT * 2
+	}
+	
+	// Start drawing
+	let ctx = elem.getContext("2d")
+	
+	// Check for fonts
+	if (document.fonts)
+	{
+		let fontsMissing =
+			!document.fonts.check("300 1em Roboto") ||
+			!document.fonts.check("900 1em Roboto")
+		
+		if (fontsMissing)
+		{
+			let text = "ƒšяαボ"
+			
+			ctx.font = "900 " + "30px Roboto"
+			ctx.fillStyle = "#ffffff"
+			ctx.fillText(text, 0, 0)
+			ctx.font = "300 " + "30px Roboto"
+			ctx.fillStyle = "#ffffff"
+			ctx.fillText(text, 0, 0)
+			queueRefresh()
+		}
+	}
+	
+	ctx.save()
+	
+	// Clear background
+	ctx.fillStyle = "#000000"
+	ctx.fillRect(0, 0, elem.width, elem.height)
+	
+	// Draw header
+	let date = new Date()
+	let months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+	let dateStr = date.getDate() + " " + months[date.getMonth()] + " " + date.getFullYear()
+	
+	let raceStr = ""
+	let totalScore = clans.reduce((accum, clan) => accum + clan.scoreWithoutPenalties, 0)
+	totalElem.innerHTML = "Total Points: " + totalScore
+	
+	let raceNum = totalScore / raceScores[players.length]
+	if (gamedata.gamemode == "mk8d")
+	{
+		if (raceScores[players.length] > 0)
+		{
+			if (Math.floor(raceNum) == raceNum)
+				raceStr = "    •    " + Math.floor(raceNum) + " race" + (raceNum > 1 ? "s" : "")
+			else
+			{
+				let nextWholeRaceNum = Math.ceil(raceNum)
+				let missingPoints = (raceScores[players.length] * nextWholeRaceNum) - totalScore
+				
+				warningElem.innerHTML =
+					"<br>⚠ Doesn't look like a proper result! Did someone disconnect? ⚠<br>" +
+					"(Missing " + missingPoints + " point" + (missingPoints > 1 ? "s" : "") + " for " + nextWholeRaceNum + " race" + (nextWholeRaceNum > 1 ? "s" : "") + ")"
+					
+				flashWarning()
+			}
+		}
+	}
+	
+	ctx.font = "300 " + (HEADER_HEIGHT * 0.65) + "px Roboto"
+	ctx.textBaseline = "middle"
+	ctx.fillStyle = "#ffffff"
+	ctx.textAlign = "center"
+	
+	ctx.fillText(dateStr + "    •    200 League" + raceStr, TOTAL_WIDTH / 2, HEADER_HEIGHT / 2, TOTAL_WIDTH)
+	let imgRank = document.getElementById("imgRank1")
+	if (imgRank != null && imgRank.imgLoaded == true)
+		ctx.drawImage(imgRank, 50, HEADER_HEIGHT / 2 - 32 / 2, 39, 32)
 
 	let calcClanTagSize = (clan) => Math.floor(Math.min(clan.h * 1.5, CLAN_SCORE_WIDTH * 0.35))
 	let calcClanScoreSize = (clan) => Math.floor(Math.min(clan.h * 1.5, CLAN_SCORE_WIDTH * 0.35))
