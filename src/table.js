@@ -56,10 +56,15 @@ function refreshFromData()
 	img.style.opacity = 1
 	
 	let style = STYLE_DEFAULT
-	if (getURLQueryParameter("style").toLowerCase() == "mku")
-		style = STYLE_MKU
-	else if (getURLQueryParameter("style").toLowerCase() == "200l")
-		style = STYLE_200L
+	
+	let reqStyle = getURLQueryParameter("style")
+	if (reqStyle != null)
+	{
+		if (reqStyle.toLowerCase() == "mku")
+			style = STYLE_MKU
+		else if (reqStyle.toLowerCase() == "200l")
+			style = STYLE_200L
+	}
 	
 	drawTable(canvas, spanTotal, spanWarning, parseData(textarea.value), style)
 	
