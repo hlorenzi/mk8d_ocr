@@ -136,21 +136,21 @@ function loadExample1()
 {
 	document.getElementById("textareaData").value =
 		"A - Full Team Name\n" +
-		"Player 1 [us] 112\n" +
-		"Player 2 [gb] 110\n" +
-		"Player 3 [au] 76\n" +
-		"Player 4 [ca] 72\n" +
-		"Player 5 [de] 90-10\n" +
-		"Player 6 [ie] 55\n" +
+		"Alice [us] 112\n" +
+		"Billy [gb] 110\n" +
+		"Carol [au] 76\n" +
+		"Derek [ca] 72\n" +
+		"Ellen [de] 90-10\n" +
+		"Frank [ie] 55\n" +
 		"Penalty -10\n" +
 		"\n" +
 		"B\n" +
-		"Player 7 [cl] 70+20+8\n" +
-		"Player 8 [br] 78\n" +
-		"Player 9 46\n" +
-		"Player 10 [kr] 100\n" +
-		"Player 11 [jp] 68\n" +
-		"Player 12 [mx] 79 "
+		"Grant [cl] 70+20+8\n" +
+		"Henry [br] 78\n" +
+		"Isaac 46\n" +
+		"James [kr] 100\n" +
+		"Karen [jp] 68\n" +
+		"Lucas [mx] 79 "
 		
 	queueRefresh()
 }
@@ -160,18 +160,18 @@ function loadExample2()
 {
 	document.getElementById("textareaData").value =
 		"-\n" +
-		"Player 1 [us] 112\n" +
-		"Player 2 [gb] 110\n" +
-		"Player 3 [au] 76\n" +
-		"Player 4 [ca] 72\n" +
-		"Player 5 [de] 90-10\n" +
-		"Player 6 [ie] 55\n" +
-		"Player 7 [cl] 70+20+8\n" +
-		"Player 8 [br] 78\n" +
-		"Player 9 46\n" +
-		"Player 10 [kr] 100\n" +
-		"Player 11 [jp] 68\n" +
-		"Player 12 [mx] 79 "
+		"Alice [us] 112\n" +
+		"Billy [gb] 110\n" +
+		"Carol [au] 76\n" +
+		"Derek [ca] 72\n" +
+		"Ellen [de] 90-10\n" +
+		"Frank [ie] 55\n" +
+		"Grant [cl] 70+20+8\n" +
+		"Henry [br] 78\n" +
+		"Isaac 46\n" +
+		"James [kr] 100\n" +
+		"Karen [jp] 68\n" +
+		"Lucas [mx] 79 "
 		
 	queueRefresh()
 }
@@ -182,21 +182,21 @@ function loadExample3()
 	document.getElementById("textareaData").value =
 		"#mkwii\n\n" +
 		"A - Full Team Name\n" +
-		"Player 1 [us] 112|65|42\n" +
-		"Player 2 [gb] 110|32|88\n" +
-		"Player 3 [au] 76|18|45\n" +
-		"Player 4 [ca] 72|26|79\n" +
-		"Player 5 [de] 90-10|80|54\n" +
-		"Player 6 [ie] 55|38|34\n" +
+		"Alice [us] 112|65|42\n" +
+		"Billy [gb] 110|32|88\n" +
+		"Carol [au] 76|18|45\n" +
+		"Derek [ca] 72|26|79\n" +
+		"Ellen [de] 90-10|80|54\n" +
+		"Frank [ie] 55|38|34\n" +
 		"Penalty -10\n" +
 		"\n" +
 		"B\n" +
-		"Player 7 [cl] 70+20+8|50|62\n" +
-		"Player 8 [br] 78|45|70\n" +
-		"Player 9 46|28|61\n" +
-		"Player 10 [kr] 100|80|49\n" +
-		"Player 11 [jp] 68|36|38\n" +
-		"Player 12 [mx] 79|15|108 "
+		"Grant [cl] 70+20+8|50|62\n" +
+		"Henry [br] 78|45|70\n" +
+		"Isaac 46|28|61\n" +
+		"James [kr] 100|80|49\n" +
+		"Karen [jp] 68|36|38\n" +
+		"Lucas [mx] 79|15|108 "
 		
 	queueRefresh()
 }
@@ -399,7 +399,10 @@ function parseData(str)
 
 function parseClan(str)
 {
-	let matches = str.trim().match(/(.*?)(?:-(.*))?$/)
+	let hexColorMatches = str.trim().match(/(.*)[ ]+#([0-9A-Fa-f]+)$/)
+	let strWithoutHexColor = (hexColorMatches == null || hexColorMatches[2].length != 6 ? str : hexColorMatches[1])
+	
+	let matches = strWithoutHexColor.trim().match(/(.*?)(?:-(.*))?$/)
 	if (matches == null)
 		return null
 	
@@ -407,7 +410,8 @@ function parseClan(str)
 		tag: matches[1].trim(),
 		name: matches[2] == null ? null : matches[2].trim(),
 		players: [],
-		bonuses: 0
+		bonuses: 0,
+		color: (hexColorMatches != null ? hexColorMatches[2] : null)
 	}
 }
 
@@ -722,19 +726,20 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 	clans.forEach(clan => clan.players.sort((a, b) => b.totalScoreWithoutPenalties - a.totalScoreWithoutPenalties))
 	
 	// Calculate clan colors
-	let unusedHues =
-	[
-		  0,  14,  20,  24,  28,  32,
-		 53,  66,  87, 108, 120, 130,
-		140, 145, 150, 155, 160, 185,
-		190, 195, 200, 210, 220, 225,
-		240
-	]
-	
 	let usedHashes = []
 	for (let c = 0; c < clans.length; c++)
 	{
 		let clan = clans[c]
+		
+		if (clan.color && clan.color.length == 6)
+		{
+			let rgb = hexToRgb(clan.color)
+			let hsv = rgbToHsv(rgb.r, rgb.g, rgb.b)
+			clan.hue = hsv.h
+			clan.saturation = hsv.s
+			clan.colorValue = hsv.v
+			continue
+		}
 		
 		let hash = 122
 		let nameLower = (clan.tag == null ? "" : clan.tag.toLowerCase())
@@ -754,7 +759,8 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 		usedHashes.push(hash)
 		
 		clan.hue = hash / 256
-		clan.saturation = (clan.tag == null || clan.tag == "" ? 0 : (hash >= 150 && hash <= 215 ? (hash >= 165 && hash <= 200 ? 0.4 : 0.6) : 0.8))
+		clan.saturation = (clan.tag == null || clan.tag == "" ? 0 : 0.1 + (hash >= 150 && hash <= 215 ? (hash >= 165 && hash <= 200 ? 0.4 : 0.6) : 0.8))
+		clan.colorValue = 1
 	}
 	
 	// Join all players into an array
@@ -968,11 +974,11 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 		ctx.save()
 		ctx.translate(0, clan.y)
 		
-		ctx.fillStyle = rgbToHex(hsvToRgb(clan.hue, clan.saturation + 0.1, 1))
+		ctx.fillStyle = rgbToHex(hsvToRgb(clan.hue, clan.saturation, clan.colorValue))
 		ctx.fillRect(0, -CLAN_MARGIN_HEIGHT, TOTAL_WIDTH, clan.h + 1 + CLAN_MARGIN_HEIGHT * 2)
 		
 		ctx.save()
-		ctx.fillStyle = rgbToHex(hsvToRgb(clan.hue, clan.saturation, 0.4))
+		ctx.fillStyle = rgbToHex(hsvToRgb(clan.hue, clan.saturation - 0.1, clan.colorValue * 0.4))
 		let alternateY = true
 		for (let y = 0; y < clan.h / 2 + CLAN_MARGIN_HEIGHT + 10; y += 10)
 		{
@@ -1050,7 +1056,7 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 			ctx.translate(PLAYER_X, clan.h / 2 + (-clan.players.length / 2 + p - (clan.penalty != 0 ? 0.5 : 0)) * PLAYER_HEIGHT)
 			
 			ctx.save()
-			ctx.fillStyle = rgbToHex(hsvToRgb(clan.hue, clan.saturation, 0.6))
+			ctx.fillStyle = rgbToHex(hsvToRgb(clan.hue, clan.saturation - 0.1, clan.colorValue * 0.6))
 			ctx.globalAlpha = 0.4
 			ctx.roundRect(0, 2, PLAYER_WIDTH, PLAYER_HEIGHT - 4, 5)
 			ctx.fill()
@@ -1165,7 +1171,7 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 			ctx.translate(PLAYER_X, clan.h / 2 + (clan.players.length / 2 - (clan.penalty != 0 ? 0.5 : 0)) * PLAYER_HEIGHT)
 			
 			ctx.save()
-			ctx.fillStyle = rgbToHex(hsvToRgb(clan.hue, clan.saturation, 0.6))
+			ctx.fillStyle = rgbToHex(hsvToRgb(clan.hue, clan.saturation - 0.1, clan.colorValue * 0.6))
 			ctx.globalAlpha = 0.4
 			ctx.roundRect(30, 2 + 5, PLAYER_WIDTH - 60, PLAYER_HEIGHT - 10, 5)
 			ctx.fill()
@@ -2291,6 +2297,8 @@ function hsvToRgb(h, s, v)
 	let g = 0
 	let b = 0
 	
+	s = Math.max(0, Math.min(1, s))
+	
     let i = Math.floor(h * 6)
     let f = h * 6 - i
     let p = v * (1 - s)
@@ -2315,12 +2323,56 @@ function hsvToRgb(h, s, v)
 }
 
 
+function rgbToHsv(r, g, b)
+{
+	r /= 255
+	g /= 255
+	b /= 255
+
+	let max = Math.max(r, g, b)
+	let min = Math.min(r, g, b)
+	let h = max
+	let s = max
+	let v = max
+
+	let d = max - min
+	s = max == 0 ? 0 : d / max
+
+	if (max == min)
+		h = 0
+	else
+	{
+		switch (max)
+		{
+			case r: h = (g - b) / d + (g < b ? 6 : 0); break
+			case g: h = (b - r) / d + 2; break
+			case b: h = (r - g) / d + 4; break
+		}
+
+		h /= 6
+	}
+
+	return { h, s, v }
+}
+
+
 function rgbToHex(r, g, b)
 {
 	if (g == undefined)
 		return rgbToHex(r.r, r.g, r.b)
 	
     return "#" + ((1 << 24) + (Math.floor(r) << 16) + (Math.floor(g) << 8) + Math.floor(b)).toString(16).slice(1)
+}
+
+
+function hexToRgb(str)
+{
+	let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(str)
+    return result ? {
+        r: parseInt(result[1], 16),
+        g: parseInt(result[2], 16),
+        b: parseInt(result[3], 16)
+    } : null
 }
 
 
