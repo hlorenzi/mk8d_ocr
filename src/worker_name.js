@@ -1,9 +1,7 @@
 importScripts("image.js")
-
-
-nameGlyphs = null
-scoreGlyphs = null
-flagData = null
+importScripts("nameGlyphs.js")
+importScripts("scoreGlyphs.js")
+importScripts("flags.js")
 
 
 onmessage = (ev) =>
@@ -17,7 +15,6 @@ onmessage = (ev) =>
 	{
 		case "name":
 		{
-			nameGlyphs = ev.data.nameGlyphs
 			for (let i = 0; i < nameGlyphs.length; i++)
 				nameGlyphs[i].data = Object.assign(new ImageHelper(), nameGlyphs[i].data)
 			
@@ -50,7 +47,6 @@ onmessage = (ev) =>
 		
 		case "score":
 		{
-			scoreGlyphs = ev.data.scoreGlyphs
 			for (let i = 0; i < scoreGlyphs.length; i++)
 				scoreGlyphs[i].data = Object.assign(new ImageHelper(), scoreGlyphs[i].data)
 			
@@ -60,7 +56,6 @@ onmessage = (ev) =>
 		
 		case "flag":
 		{
-			flagData = ev.data.flagData
 			for (let i = 0; i < flagData.length; i++)
 				flagData[i].data = Object.assign(new ImageHelper(), flagData[i].data)
 			

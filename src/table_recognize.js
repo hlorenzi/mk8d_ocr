@@ -203,9 +203,9 @@ function recognizeImage(workers, table, img)
 	let scores = img.extractScores(false)
 	for (let p = 0; p < players.length; p++)
 	{
-		workers[p % workers.length].postMessage({ kind: "name",  img: players[p], nameGlyphs: nameGlyphs,   userdata: { index: p } })
-		workers[p % workers.length].postMessage({ kind: "score", img: scores[p],  scoreGlyphs: scoreGlyphs, userdata: { index: p } })
-		workers[p % workers.length].postMessage({ kind: "flag",  img: flags[p],   flagData: flagData,       userdata: { index: p } })
+		workers[p % workers.length].postMessage({ kind: "name",  img: players[p], userdata: { index: p } })
+		workers[p % workers.length].postMessage({ kind: "score", img: scores[p],  userdata: { index: p } })
+		workers[p % workers.length].postMessage({ kind: "flag",  img: flags[p],   userdata: { index: p } })
 	}
 }
 

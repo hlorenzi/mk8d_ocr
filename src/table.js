@@ -16,6 +16,8 @@ const STYLE_200L = 2
 
 function main()
 {
+	//cacheTeamRegistry()
+	
 	document.getElementById("textareaData").placeholder = 
 		"Type in the results here, or load an example below.\n\n" +
 		"If you have a saved MK8D screenshot, upload it at the bottom of the page.\n\n" +
@@ -31,6 +33,8 @@ function main()
 		"<tr><td>6 Players / 3v3</td><td>" + raceScores[6] + "</td><td>" + (raceScores[6] * 12) + "</td></tr>" +
 		"<tr><td>4 Players / 2v2</td><td>" + raceScores[4] + "</td><td>" + (raceScores[4] * 12) + "</td></tr>" +
 		"<tr><td>2 Players / 1v1</td><td>" + raceScores[2] + "</td><td>" + (raceScores[2] * 12) + "</td></tr>"
+		
+	refreshFromData()
 }
 
 
@@ -135,7 +139,7 @@ function flashWarning(remaining = 10)
 function loadExample1()
 {
 	document.getElementById("textareaData").value =
-		"A - Full Team Name\n" +
+		"A - Full Team Name #ff00ff\n" +
 		"Alice [us] 112\n" +
 		"Billy [gb] 110\n" +
 		"Carol [au] 76\n" +
