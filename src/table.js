@@ -948,7 +948,7 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 	ctx.fillStyle = "#ffffff"
 	ctx.textAlign = "center"
 	
-	ctx.fillText(dateStr + raceStr, TOTAL_WIDTH / 2, HEADER_HEIGHT / 2, TOTAL_WIDTH)
+	ctx.fillText(dateStr + raceStr, TOTAL_WIDTH / 2, HEADER_HEIGHT / 2 + (HEADER_HEIGHT * 0.65) * 0.1, TOTAL_WIDTH)
 	
 	let calcClanTagSize = (clan) => Math.floor(Math.min(clan.h * 1.5, CLAN_SCORE_WIDTH * 0.35))
 	let calcClanScoreSize = (clan) => Math.floor(Math.min(clan.h * 1.5, CLAN_SCORE_WIDTH * 0.35))
@@ -1009,7 +1009,7 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 			
 			ctx.translate(CLAN_SCORE_X, 0)
 			ctx.scale(0.75, 1)
-			ctx.fillText(clan.score.toString(), 0, clan.h / 2 + calcClanTagSize(clan) * 0.05, CLAN_SCORE_WIDTH - 20)
+			ctx.fillText(clan.score.toString(), 0, clan.h / 2 + calcClanTagSize(clan) * 0.1, CLAN_SCORE_WIDTH - 20)
 			ctx.restore()
 			
 			ctx.save()
@@ -1018,7 +1018,7 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 			ctx.textBaseline = "middle"
 			ctx.fillStyle = "#000000"
 			if (clan.tag != null)
-				ctx.fillText(clan.tag, CLAN_NAME_X, clan.h / 2, CLAN_NAME_WIDTH - 20)
+				ctx.fillText(clan.tag, CLAN_NAME_X, clan.h / 2 + calcClanTagSize(clan) * 0.1, CLAN_NAME_WIDTH - 20)
 			
 			if (clan.name != null)
 			{
@@ -1045,7 +1045,7 @@ function drawTableDefault(elem, totalElem, warningElem, gamedata)
 					ctx.font = "900 " + (PLAYER_HEIGHT * 0.95 * 0.6) + "px Roboto"
 					ctx.textAlign = "center"
 					ctx.textBaseline = "middle"
-					ctx.fillText(rankStr, (CLAN_NAME_X - maxClanTagWidth / 2) / 2, clan.h / 2, CLAN_RANK_WIDTH)
+					ctx.fillText(rankStr, (CLAN_NAME_X - maxClanTagWidth / 2) / 2, clan.h / 2 + (PLAYER_HEIGHT * 0.95 * 0.6) * 0.1, CLAN_RANK_WIDTH)
 				}
 				ctx.restore()
 			}
