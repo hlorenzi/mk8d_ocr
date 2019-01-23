@@ -1,4 +1,4 @@
-let refreshTimeout = null
+﻿let refreshTimeout = null
 let warningFlashTimeout = null
 let warningCanFlash = false
 
@@ -23,6 +23,9 @@ function main()
 		"Type in the results here, or load an example below.\n\n" +
 		"If you have a saved MK8D screenshot, upload it at the bottom of the page.\n\n" +
 		"If you have copied an MK8D screenshot to the clipboard, just hit Ctrl+V anywhere."
+  
+  if (sessionStorage.getItem("players"))
+    document.getElementById("textareaData").value = sessionStorage.getItem("players")
 		
 	document.getElementById("tableTotals").innerHTML =
 		"<tr style='font-size:1.25em;'><td>MK8D Point Totals</td><td>1 Race</td><td>12 Races</td></tr>" +
@@ -49,6 +52,12 @@ function queueRefresh()
 	refreshTimeout = setTimeout(refreshFromData, 500)
 }
 
+function styleChange(style)
+{
+  window.history.replaceState(null, null, style === "default" ? "/table.html" : "?style=" + style)
+  sessionStorage.setItem("players", document.getElementById("textareaData").value)
+  location.reload()
+}
 
 function refreshFromData()
 {
