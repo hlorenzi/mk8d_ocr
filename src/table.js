@@ -54,7 +54,7 @@ function queueRefresh()
 
 function styleChange(style)
 {
-  window.history.replaceState(null, null, style === "default" ? "/table.html" : "?style=" + style)
+  window.history.replaceState(null, null, style === "default" ? window.location.toString().substring(0, window.location.toString().indexOf("?")) : "?style=" + style)
   sessionStorage.setItem("players", document.getElementById("textareaData").value)
   location.reload()
 }
