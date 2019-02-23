@@ -35,6 +35,9 @@ function main()
 		"<tr><td>4 Players / 2v2</td><td>" + raceScores[4] + "</td><td>" + (raceScores[4] * 12) + "</td></tr>" +
 		"<tr><td>2 Players / 1v1</td><td>" + raceScores[2] + "</td><td>" + (raceScores[2] * 12) + "</td></tr>"
 		
+	if (localStorage.getItem("matchStr"))
+		document.getElementById("textareaData").value = localStorage.getItem("matchStr")
+	
 	refreshFromData()
 }
 
@@ -57,6 +60,8 @@ function refreshFromData()
 	let img = document.getElementById("imgTable")
 	let spanTotal = document.getElementById("spanTotal")
 	let spanWarning = document.getElementById("spanWarning")
+	
+	localStorage.setItem("matchStr", textarea.value)
 	
 	img.style.opacity = 1
 	

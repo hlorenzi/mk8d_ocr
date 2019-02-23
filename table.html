@@ -12,6 +12,17 @@
 
 			gtag('config', 'UA-119332275-1');
 		</script>
+		
+		<script>
+			var trackOutboundLink = function(url) {
+			  gtag('event', 'click', {
+				'event_category': 'outbound',
+				'event_label': url,
+				'transport_type': 'beacon',
+				'event_callback': function(){document.location = url;}
+			  });
+			}
+		</script>
 
 		<title>Lorenzi's Mario Kart Table Maker</title>
 		<meta charset="UTF-8">
@@ -91,6 +102,23 @@
 			cursor: pointer;
 		}
 		
+		#divGameAd2
+		{
+			margin: 0;
+			padding: 0;
+			border: 0;
+			width: 100%;
+			background-color: #ff99ff;
+			text-align: center;
+			color: black;
+		}
+		
+		#divGameAd2:hover
+		{
+			background-color: #ff77ff;
+			cursor: pointer;
+		}
+		
 		.adName
 		{
 			font-size: 1.5em;
@@ -123,7 +151,7 @@
 	<body onload="main(); setup(); queueRefresh()" style="text-align:center; margin:0; margin-bottom:1em;">
 		<table style="margin:auto;">
 			<tr style="width:100vw;"><td style="width:100vw;">
-				<a href="https://www.youtube.com/watch?v=f143Heg4GJw" target="_blank" style="text-decoration: none;">
+				<a href="https://www.youtube.com/watch?v=f143Heg4GJw" onclick="trackOutboundLink('https://www.youtube.com/watch?v=f143Heg4GJw'); return false;" target="_blank" style="text-decoration: none;">
 					<div id="divGameAd">
 						<table style="margin-left:auto; margin-right:auto; padding:0;">
 							<tr style="padding:0;"><td style="padding:0;">
@@ -141,6 +169,24 @@
 								<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/f/f9/Xbox_one_logo.svg/1024px-Xbox_one_logo.svg.png" style="width:1em; position:relative; top:0.1em;"></img> Xbox One
 							</td><td style="padding:0;">
 								<img src="assets/akai.png"></img>
+							</td></tr>
+						</table>
+					</div>
+				</a>
+			</td></tr>
+			
+			<tr style="width:100vw;"><td style="width:100vw;">
+				<a href="https://gb.hlorenzi.xyz" onclick="trackOutboundLink('https://gb.hlorenzi.xyz'); return false;" target="_blank" style="text-decoration: none;">
+					<div id="divGameAd2">
+						<table style="margin-left:auto; margin-right:auto; padding:0;">
+							<tr style="padding:0;"><td style="padding:0;">
+								<img style="border-radius:10em;width:6em;height:auto;padding:0.5em;" src="https://cdn.discordapp.com/avatars/547961278572789761/ae7587406d19c2d0ee0728066c3deebb.png?size=128"></img>
+							</td><td style="padding:0; font-size:130%;">
+								Register your <span style="font-size:150%;color:#808">team</span> on my new site!
+								<br>
+								Keep a record of <span style="font-size:120%;color:#fff">all your matches!</span>
+								<br>
+								<span style="font-size:110%;color:#808">Discord bot</span> for integration into your server!
 							</td></tr>
 						</table>
 					</div>
