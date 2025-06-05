@@ -23,23 +23,23 @@ function recognizeResults(div, img)
 	let table = document.createElement("table")
 	div.appendChild(table)
 	
-	img = img.stretchTo(1280, 720)
+	img = img.stretchTo(1920, 1080)
 	
 	let players = img.extractPlayers(false)
 	let scores = img.extractScores(false)
-	let flags = img.extractFlags(false)
+	//let flags = img.extractFlags(false)
 	for (let p = 0; p < players.length; p++)
 	{
 		let tr = document.createElement("tr")
-		
+
 		let nameCanvas = players[p].makeCanvas()
 		let td1 = document.createElement("td")
 		td1.appendChild(nameCanvas)
 		tr.appendChild(td1)
 		
-		let td2 = document.createElement("td")
-		td2.appendChild(flags[p].makeCanvas())
-		tr.appendChild(td2)
+		//let td2 = document.createElement("td")
+		//td2.appendChild(flags[p].makeCanvas())
+		//tr.appendChild(td2)
 		
 		let scoreCanvas = scores[p].makeCanvas()
 		let td3 = document.createElement("td")
@@ -72,7 +72,7 @@ function recognizeResults(div, img)
 			{
 				case "name":  span1.innerHTML = ev.data.name; recognizedNames[ev.data.userdata.index] = ev.data.name; break
 				case "score": span3.innerHTML = ev.data.score.toString(); recognizedScores[ev.data.userdata.index] = ev.data.score; break
-				case "flag":  span2.innerHTML = ev.data.flag; break
+				//case "flag":  span2.innerHTML = ev.data.flag; break
 			}
 			
 			if (finishedNum == 12 * 3)
@@ -95,7 +95,7 @@ function recognizeResults(div, img)
 		
 		worker.postMessage({ kind: "name",  img: players[p], nameGlyphs: nameGlyphs,   userdata: { index: p } })
 		worker.postMessage({ kind: "score", img: scores[p],  scoreGlyphs: scoreGlyphs, userdata: { index: p } })
-		worker.postMessage({ kind: "flag",  img: flags[p],   flagData: flagData,       userdata: { index: p } })
+		//worker.postMessage({ kind: "flag",  img: flags[p],   flagData: flagData,       userdata: { index: p } })
 	}
 }
 

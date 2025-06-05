@@ -13,31 +13,33 @@ function setImage(input)
 	let extractFlags = document.getElementById("radioFlags").checked
 	let withSpaces = document.getElementById("checkboxSpaces").checked
 	
+	let isMKWorld = document.getElementById("radioMKWorld").checked
+	let isMK8DX = document.getElementById("radioMK8DX").checked
+
 	ImageHelper.fromSrc(inputGetImageSrc(input), (img) =>
 	{
-		img = img.stretchTo(1280, 720)
+		img = img.stretchTo(1920, 1080)
 		
 		while (div.firstChild)
 			div.removeChild(div.firstChild)
 		
 		let table = document.createElement("table")
 		
-		if (extractFlags)
+		/*if (extractFlags)
 		{
 			let flags = img.extractFlags()
 			for (let flag of flags)
 				addToTable(table, flag)
 		}
-		else if (extractScores)
+		else*/
+		if (extractScores)
 		{
 			let scores = img.extractScores()
 			for (let score of scores)
 			{
-				for (let x = score.imageData.width - 18; x > 0; x -= 18)
-				{
-					let charImage = score.extractRegion(x, 0, 18, score.imageData.height)
-					addToTable(table, charImage)
-				}
+				let glyphs = score.extractScoreGlyphs()
+				for (const glyph of glyphs)
+					addToTable(table, glyph)
 			}
 		}
 		else
@@ -45,33 +47,9 @@ function setImage(input)
 			let players = img.extractPlayers()
 			for (let player of players)
 			{
-				let xPrev = null
-				let x = 0
-				while (true)
-				{
-					let xBegin = player.findNextBinaryColumn(x, true)
-					if (xBegin == null)
-						break
-					
-					let xEnd = player.findNextBinaryColumn(xBegin, false)
-					if (xEnd == null)
-						break
-					
-					if (xEnd == xBegin)
-						break
-					
-					if (!withSpaces)
-						xPrev = xBegin
-					
-					if (xPrev != null)
-					{
-						let charImage = player.extractRegion(xPrev, 0, xEnd - xPrev, player.imageData.height)
-						addToTable(table, charImage)
-					}
-					
-					xPrev = xBegin
-					x = xEnd
-				}
+				let glyphs = player.extractPlayerGlyphs()
+				for (const glyph of glyphs)
+					addToTable(table, glyph)
 			}
 		}
 		
@@ -82,6 +60,9 @@ function setImage(input)
 
 function addToTable(table, img)
 {
+	if (img === null)
+		return
+
 	let tr = document.createElement("tr")
 	
 	let td1 = document.createElement("td")
