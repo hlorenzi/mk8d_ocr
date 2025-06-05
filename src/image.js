@@ -422,7 +422,7 @@ class ImageHelper
 		if (this.detectOnlineRace())
 		{
 			for (let i = 0; i < 13; i++)
-				players.push(this.extractRegion(1227, 54 + 77 * i, 380, 48))
+				players.push(this.extractRegion(1229, 54 + 77 * i, 380, 48))
 			
 		}
 		else
@@ -436,8 +436,8 @@ class ImageHelper
 		{
 			let isYellow = players[i].regionProximity(0, 0, 170, 5, 255, 214, 32)
 			
-			if (false)//isYellow > 0.8)
-				players[i].binarize(255, 255, 255, 0.8)
+			if (isYellow > 0.8)
+				players[i].binarize(255, 255, 255, 0.9)
 			else
 				players[i].binarize(255, 255, 255, 0.7)
 		}
@@ -469,7 +469,7 @@ class ImageHelper
 		
 		for (let i = 0; i < scores.length; i++)
 		{
-			scores[i].binarize(255, 255, 255, 0.7)
+			scores[i].binarize(255, 255, 255, 0.75)
 		}
 		
 		if (cache)
@@ -491,18 +491,36 @@ class ImageHelper
 			if (pBegin == null)
 				break
 
-			let pixels = this.findConnectedRegion(pBegin.x, pBegin.y, 1, -0.1, 12)
+			let pixels = this.findConnectedRegion(pBegin.x, pBegin.y, 1, -0.1, 40)
 			let charImage = this.extractPixels(pixels)
 			if (charImage == null)
 				break
-			
-			if (pBegin.x > x + 6 + 15)
-				glyphs.push(null)
 
-			glyphs.push(charImage)
+			if (pBegin.x > x + 7 + 15)
+				glyphs.push([null])
+
+			let advance = charImage.imageData.width
+			let entry = [charImage]
+
+			{
+				let x2 = pBegin.x + charImage.imageData.width - 15
+				let image2 = this.clone()
+				image2.fillPixels(pixels, 0, 0, 0)
+
+				let pBegin2 = image2.findNextBinaryColumn(x2, true, -0.1)
+				if (pBegin2 != null)
+				{
+					let pixels2 = image2.findConnectedRegion(pBegin2.x, pBegin2.y, 1, -0.1, 40)
+					let charImage2 = this.extractPixels([...pixels, ...pixels2])
+					if (charImage2 != null)
+						entry = [charImage, charImage2]
+				}
+			}
+
+			glyphs.push(entry)
 			this.fillPixels(pixels, 0, 0, 0)
 
-			x = pBegin.x + charImage.imageData.width - 15
+			x = pBegin.x + advance - 15
 		}
 
 		return glyphs
@@ -525,10 +543,31 @@ class ImageHelper
 			if (charImage == null)
 				break
 
-			glyphs.push(charImage)
+			if (pBegin.x > x + 7 + 15)
+				glyphs.push([null])
+
+			let advance = charImage.imageData.width
+			let entry = [charImage]
+
+			{
+				let x2 = pBegin.x + charImage.imageData.width - 15
+				let image2 = this.clone()
+				image2.fillPixels(pixels, 0, 0, 0)
+
+				let pBegin2 = image2.findNextBinaryColumn(x2, true, 0)
+				if (pBegin2 != null)
+				{
+					let pixels2 = image2.findConnectedRegion(pBegin2.x, pBegin2.y, 1, 0, 40)
+					let charImage2 = this.extractPixels([...pixels, ...pixels2])
+					if (charImage2 != null)
+						entry = [charImage, charImage2]
+				}
+			}
+
+			glyphs.push(entry)
 			this.fillPixels(pixels, 0, 0, 0)
-			
-			x = pBegin.x + charImage.imageData.width - 15
+
+			x = pBegin.x + advance - 15
 		}
 
 		return glyphs
@@ -664,7 +703,7 @@ class ImageHelper
 				pixelPositions.push(p)
 
 				for (let i = 0; i <= 0; i++)
-				for (let j = -lookUp; j < 0; j++)
+				for (let j = -lookUp; j <= -1; j++)
 					remaining.push({ x: p.x + i + Math.round(j * slant), y: p.y + j })
 
 				for (let i = -1; i <= 1; i++)
@@ -743,7 +782,7 @@ class ImageHelper
 			let columnFilled = false
 			let filledY = 0
 			
-			for (let y = 0; y < this.imageData.height; y++)
+			for (let y = this.imageData.height; y >= 0; y--)
 			{
 				if (this.getBinaryPixel(x + slant * y, y))
 				{
@@ -1088,9 +1127,11 @@ class ImageHelper
 		let confidence = 0
 
 		let chars = this.extractPlayerGlyphs()
-		for (const char of chars)
+		for (let c = 0; c < chars.length; c++)
 		{
-			if (char === null)
+			const char = chars[c]
+
+			if (char[0] === null)
 			{
 				str += " "
 				continue
@@ -1103,11 +1144,16 @@ class ImageHelper
 				if (glyph.skip)
 					continue
 				
-				let score = char.scoreGlyph(glyph, debug)
-				if (score == null)
-					continue
-				
-				scores.push({ glyph: glyph, score: score })
+				for (let s = 0; s < char.length; s++)
+				{
+					const subchar = char[s]
+
+					let score = subchar.scoreGlyph(glyph, debug)
+					if (score == null)
+						continue
+					
+					scores.push({ glyph: glyph, advance: s, score: score })
+				}
 			}
 
 			if (scores.length == 0)
@@ -1127,6 +1173,7 @@ class ImageHelper
 			
 			str += chosen.glyph.c
 			confidence += (chosen.score)
+			c += chosen.advance
 		}
 		
 		return { str: str, confidence: confidence }
@@ -1141,9 +1188,11 @@ class ImageHelper
 		let confidence = 0
 
 		let chars = this.extractScoreGlyphs()
-		for (const char of chars)
+		for (let c = 0; c < chars.length; c++)
 		{
-			if (char === null)
+			const char = chars[c]
+
+			if (char[0] === null)
 				continue
 
 			let scores = []
@@ -1153,11 +1202,16 @@ class ImageHelper
 				if (glyph.skip)
 					continue
 				
-				let score = char.scoreGlyph(glyph, debug)
-				if (score == null)
-					continue
-				
-				scores.push({ glyph: glyph, score: score })
+				for (let s = 0; s < char.length; s++)
+				{
+					const subchar = char[s]
+
+					let score = subchar.scoreGlyph(glyph, debug)
+					if (score == null)
+						continue
+					
+					scores.push({ glyph: glyph, advance: s, score: score })
+				}
 			}
 
 			if (scores.length == 0)
@@ -1177,6 +1231,7 @@ class ImageHelper
 			
 			str += chosen.glyph.c
 			confidence += (chosen.score)
+			c += chosen.advance
 		}
 		
 		let value = parseInt(str)

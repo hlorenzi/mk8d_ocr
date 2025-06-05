@@ -11,7 +11,7 @@ function setImage(input)
 	let extractNames = document.getElementById("radioNames").checked
 	let extractScores = document.getElementById("radioScores").checked
 	let extractFlags = document.getElementById("radioFlags").checked
-	let withSpaces = document.getElementById("checkboxSpaces").checked
+	let joinGlyphs = document.getElementById("checkboxSpaces").checked
 	
 	let isMKWorld = document.getElementById("radioMKWorld").checked
 	let isMK8DX = document.getElementById("radioMK8DX").checked
@@ -39,7 +39,8 @@ function setImage(input)
 			{
 				let glyphs = score.extractScoreGlyphs()
 				for (const glyph of glyphs)
-					addToTable(table, glyph)
+					for (const subglyph of glyph)
+						addToTable(table, subglyph)
 			}
 		}
 		else
@@ -47,9 +48,10 @@ function setImage(input)
 			let players = img.extractPlayers()
 			for (let player of players)
 			{
-				let glyphs = player.extractPlayerGlyphs()
+				let glyphs = player.extractPlayerGlyphs(joinGlyphs)
 				for (const glyph of glyphs)
-					addToTable(table, glyph)
+					for (const subglyph of glyph)
+						addToTable(table, subglyph)
 			}
 		}
 		
