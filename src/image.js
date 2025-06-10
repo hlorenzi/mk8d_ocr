@@ -281,9 +281,23 @@ class ImageHelper
 		let canvas = document.createElement("canvas")
 		canvas.width = this.imageData.width
 		canvas.height = this.imageData.height
-		
+
 		let ctx = canvas.getContext("2d")
 		ctx.putImageData(this.imageData, 0, 0)
+
+		/*let cloned = this.clone()
+		this.createCache()
+		for (let y = 0; y < this.imageData.height; y++)
+		{
+			for (let x = 0; x < this.imageData.width; x++)
+			{
+				if (this.cacheDistanceToEdge[y][x] < 100)
+					cloned.setPixel(x, y, Math.min(255, Math.floor(this.cacheDistanceToEdge[y][x] * (255 / 4))), 0, 0, 255)
+			}
+		}
+
+		let ctx = canvas.getContext("2d")
+		ctx.putImageData(cloned.imageData, 0, 0)*/
 		
 		return canvas
 	}
@@ -342,26 +356,32 @@ class ImageHelper
 		
 		return newImage
 	}
-	
-	
-	detectTrophyScreen()
+
+
+	detectTeamMatch()
 	{
-		let region = this.extractRegion(0, 0, 250, 20)
-		let isRed = region.wholeImageProximity(220, 0, 0)
-		
-		return isRed > 0.9
+		let score = 0
+
+		for (let i = 0; i < 4; i++)
+		{
+			const isRed = this.regionProximity(1080, 54 + 77 * i, 10, 48, 194, 29, 0) > 0.9
+			const isBlue = this.regionProximity(1080, 54 + 77 * i, 10, 48, 20, 95, 212) > 0.9
+
+			score += isRed || isBlue ? 1 : 0
+		}
+
+		return score >= 2
 	}
 	
 	
-	detectOnlineRace()
+	detectOnlineMatch()
 	{
-		let region1 = this.extractRegion(1144, 615, 5, 5)
-		let isWhite1 = region1.wholeImageProximity(255, 255, 255)
-		
-		let region2 = this.extractRegion(1100, 615, 5, 5)
-		let isWhite2 = region2.wholeImageProximity(255, 255, 255)
-		
-		return isWhite2 > isWhite1
+		const factor1stYellowOnline = this.regionProximity(1098, 65, 10, 10, 240, 224, 68)
+		const factor1stYellowLocal = this.regionProximity(1142, 65, 10, 10, 240, 224, 68)
+
+		console.log("factor1stYellow online/local", factor1stYellowOnline, factor1stYellowLocal)
+
+		return factor1stYellowLocal < 0.8 && factor1stYellowOnline > factor1stYellowLocal
 	}
 	
 	
@@ -415,68 +435,94 @@ class ImageHelper
 	}
 	
 	
-	extractPlayers(cache = true)
+	extractRegionsOfInterest(cache = false)
 	{
-		let players = []
+		const img = this.stretchTo(1920, 1080)
 
-		if (this.detectOnlineRace())
+		const players = []
+		const scores = []
+
+		const isOnlineMatch = img.detectOnlineMatch()
+		console.log("isOnlineMatch", isOnlineMatch)
+
+		const isTeamMatch = img.detectTeamMatch()
+		console.log("isTeamMatch", isTeamMatch)
+
+		if (isOnlineMatch)
 		{
 			for (let i = 0; i < 13; i++)
-				players.push(this.extractRegion(1229, 54 + 77 * i, 380, 48))
+			{
+				players.push(img.extractRegion(1229, 54 + 77 * i, 350, 48))
+				scores.push(img.extractRegion(1725, 54 + 77 * i, 126, 48))
+			}
 			
 		}
 		else
 		{
 			for (let i = 0; i < 13; i++)
-				players.push(this.extractRegion(1272, 54 + 77 * i, 380, 48))
-			
+			{
+				players.push(img.extractRegion(1272, 54 + 77 * i, 350, 48))
+				scores.push(img.extractRegion(1725, 54 + 77 * i, 90, 48))
+			}
 		}
 		
 		for (let i = 0; i < players.length; i++)
 		{
-			let isYellow = players[i].regionProximity(0, 0, 170, 5, 255, 214, 32)
+			const isYellowBkg = players[i].regionProximity(0, 0, 170, 5, 255, 214, 32) > 0.8
+			const isRedBkg = players[i].regionProximity(0, 0, 170, 5, 194, 29, 0) > 0.85
+			const isBlueBkg = players[i].regionProximity(0, 0, 170, 5, 20, 95, 212) > 0.85
+			const whiteLetterFactor = players[i].regionContains(6, 24, 16, 16, 255, 255, 255, 0.8)
+			const isWhiteLetters = whiteLetterFactor > 0
+			console.log("player", i, "color", isYellowBkg, isRedBkg, isBlueBkg, isWhiteLetters, whiteLetterFactor)
 			
-			if (isYellow > 0.8)
-				players[i].binarize(255, 255, 255, 0.9)
+			if (isYellowBkg)
+			{
+				players[i].binarize(255, 255, 255, 0.775)
+				scores[i].binarize(255, 255, 255, 0.7)
+			}
+			else if (isRedBkg)
+			{
+				if (isWhiteLetters)
+				{
+					players[i].binarize(255, 255, 255, 0.7)
+					scores[i].binarize(255, 255, 255, 0.7)
+				}
+				else
+				{
+					players[i].binarize(122, 0, 10, 0.9)
+					scores[i].binarize(122, 0, 10, 0.9)
+				}
+			}
+			else if (isBlueBkg)
+			{
+				if (isWhiteLetters)
+				{
+					players[i].binarize(255, 255, 255, 0.7)
+					scores[i].binarize(255, 255, 255, 0.7)
+				}
+				else
+				{
+					players[i].binarize(7, 54, 106, 0.9)
+					scores[i].binarize(7, 54, 106, 0.9)
+				}
+			}
 			else
+			{
 				players[i].binarize(255, 255, 255, 0.7)
+				scores[i].binarize(255, 255, 255, 0.7)
+			}
 		}
 		
 		if (cache)
+		{
 			for (let i = 0; i < players.length; i++)
+			{
 				players[i].createCache()
-		
-		return players
-	}
-	
-	
-	extractScores(cache = true)
-	{
-		let scores = []
-		
-		if (this.detectOnlineRace())
-		{
-			for (let i = 0; i < 13; i++)
-				scores.push(this.extractRegion(1725, 54 + 77 * i, 126, 48))
-			
-		}
-		else
-		{
-			for (let i = 0; i < 13; i++)
-				scores.push(this.extractRegion(1725, 54 + 77 * i, 90, 48))
-			
-		}
-		
-		for (let i = 0; i < scores.length; i++)
-		{
-			scores[i].binarize(255, 255, 255, 0.75)
-		}
-		
-		if (cache)
-			for (let i = 0; i < scores.length; i++)
 				scores[i].createCache()
+			}
+		}
 		
-		return scores
+		return { players, scores }
 	}
 
 
@@ -574,25 +620,6 @@ class ImageHelper
 	}
 	
 	
-	extractFlags()
-	{
-		let flags = []
-		
-		if (this.detectTrophyScreen())
-		{
-			for (let i = 0; i < 12; i++)
-				flags.push(ImageHelper.fromJsonBinarized(42, 28, []))
-		}
-		else
-		{
-			for (let i = 0; i < 12; i++)
-				flags.push(this.extractRegion(958, 60 + 52 * i, 42, 28))
-		}
-		
-		return flags
-	}
-	
-	
 	static colorProximity(r1, g1, b1, r2, g2, b2)
 	{
 		let rFactor = Math.abs(r1 - r2) / 255
@@ -603,11 +630,11 @@ class ImageHelper
 	}
 	
 	
-	regionProximity(x1, y1, x2, y2, r, g, b)
+	regionProximity(x1, y1, w, h, r, g, b)
 	{
 		let result = 0
-		for (let yy = y1; yy < y2; yy++)
-		for (let xx = x1; xx < x2; xx++)
+		for (let yy = y1; yy < y1 + h; yy++)
+		for (let xx = x1; xx < x1 + w; xx++)
 		{
 			let i = (yy * this.imageData.width + xx)
 			
@@ -618,23 +645,29 @@ class ImageHelper
 				this.imageData.data[i * 4 + 2])
 		}
 		
-		return result / ((x2 - x1) * (y2 - y1))
+		return result / (w * h)
 	}
 	
 	
-	wholeImageProximity(r, g, b)
+	regionContains(x1, y1, w, h, r, g, b, threshold)
 	{
 		let result = 0
-		for (let i = 0; i < this.imageData.width * this.imageData.height; i++)
+		for (let yy = y1; yy < y1 + h; yy++)
+		for (let xx = x1; xx < x1 + w; xx++)
 		{
-			result += ImageHelper.colorProximity(
+			let i = (yy * this.imageData.width + xx)
+			
+			const proximity = ImageHelper.colorProximity(
 				r, g, b,
 				this.imageData.data[i * 4 + 0],
 				this.imageData.data[i * 4 + 1],
 				this.imageData.data[i * 4 + 2])
+
+			if (proximity > threshold)
+				result += 1
 		}
 		
-		return result / (this.imageData.width * this.imageData.height)
+		return result
 	}
 	
 	
@@ -863,20 +896,12 @@ class ImageHelper
 	{
 		let value = this.getBinaryPixel(x, y)
 
-		let testPixel = (x, y) =>
-		{
-			if (x < xMin || x >= xMax || y < yMin || y >= yMax)
-				return true
-			
-			return this.getBinaryPixel(x, y) !== value
-		}
-
 		let dist = 100
 		let searchDist = 4
 		for (let i = -searchDist; i <= searchDist; i++)
 		for (let j = -searchDist; j <= searchDist; j++)
 		{
-			if (testPixel(x + i, y + j))
+			if (this.getBinaryPixel(x + i, y + j) !== value)
 				dist = Math.min(dist, Math.sqrt(i * i + j * j))
 		}
 		
@@ -910,6 +935,48 @@ class ImageHelper
 					this.getDistanceToEdge(x, y, 0, 0, this.imageData.width, this.imageData.height))
 			}
 		}
+
+		/*this.cacheBoundaryPoints = []
+		for (let y = 0; y < this.imageData.height; y++)
+		{
+			for (let x = 0; x < this.imageData.width; x++)
+			{
+				var myColor = this.getBinaryPixel(x, y)
+				if (!myColor)
+					continue
+
+				var isBoundary = false
+
+				for (let j = -1; j <= 1; j++)
+				for (let i = -1; i <= 1; i++)
+				{
+					if (this.getBinaryPixel(x + i, y + j) !== myColor)
+						isBoundary = true
+				}
+
+				if (isBoundary)
+					this.cacheBoundaryPoints.push({ x, y })
+			}
+		}
+
+		this.cacheMinDistToBoundaryPoint = []
+		for (let y = 0; y < this.imageData.height; y++)
+		{
+			this.cacheMinDistToBoundaryPoint.push([])
+			for (let x = 0; x < this.imageData.width; x++)
+			{
+				var minDist = 1000
+				for (let p of this.cacheBoundaryPoints)
+				{
+					var xx = p.x - x
+					var yy = p.y - y
+					var dist = Math.sqrt(xx * xx + yy * yy)
+					minDist = Math.min(minDist, dist)
+				}
+
+				this.cacheMinDistToBoundaryPoint[y].push(minDist)				
+			}
+		}*/
 		
 		this.cacheNextFilledColumn = []
 		this.cacheNextEmptyColumn = []
@@ -951,8 +1018,34 @@ class ImageHelper
 	
 	scoreGlyph(glyph, debug = false)
 	{
-		let estimatedWidthDiff = Math.abs(this.imageData.width - glyph.data.imageData.width)
-		let estimatedWidthBonus = 1 / (estimatedWidthDiff + 1)
+		/*this.createCache()
+		glyph.data.createCache()
+
+		var totalDist = 0
+		for (const p of glyph.data.cacheBoundaryPoints)
+		{
+			totalDist += this.cacheDistanceToEdge[p.y][p.x] ?? 100
+		}
+		totalDist /= glyph.data.cacheBoundaryPoints.length
+		return 1 / (totalDist + 1)
+
+		
+		var totalDist = 0
+		for (let y = 0; y < Math.max(glyph.data.imageData.height, this.imageData.height); y++)
+		{
+			for (let x = 0; x < Math.max(glyph.data.imageData.width, this.imageData.width); x++)
+			{
+				totalDist +=
+					(this.cacheDistanceToEdge[y][x] ?? 100) *
+					(glyph.data.cacheDistanceToEdge[y][x] ?? 100)
+			}
+		}
+		totalDist /= Math.max(glyph.data.imageData.height, this.imageData.height) * Math.max(glyph.data.imageData.width, this.imageData.width)
+		return -totalDist
+		*/
+
+		let estimatedWidthDiff = Math.max(0, Math.abs(this.imageData.width - glyph.data.imageData.width) - 4)
+		let estimatedWidthBonus = (1 / (estimatedWidthDiff + 1)) * 0.1
 		
 		let totalPixels = 0
 		let matchingPixels = 0
@@ -970,20 +1063,23 @@ class ImageHelper
 				if (x < 0 || y < 0 || x >= glyph.data.imageData.width || y >= glyph.data.imageData.height)
 					dist2 = 0
 
-				let factor = Math.min(4, Math.max(dist1, dist2))
+				let factor = Math.max(1, dist1) * Math.max(1, dist2)
+				//Math.min(4, Math.max(0, Math.max(dist1, dist2) - 2))
 
 				totalPixels += factor
 
 				if (this.getBinaryPixel(x, y) === glyph.data.getBinaryPixel(x, y))
 					matchingPixels += factor
 				else
-					nonMatchingPixels += factor
+					nonMatchingPixels += factor * 4
 			}
 		}
-		
+
 		let score =
-			matchingPixels / totalPixels -
-			nonMatchingPixels / totalPixels
+			(matchingPixels - nonMatchingPixels) / totalPixels +
+			estimatedWidthBonus
+		
+		//console.log(glyph.c, score, matchingPixels, nonMatchingPixels, totalPixels, estimatedWidthBonus)
 		
 		return score
 	}
@@ -1126,7 +1222,7 @@ class ImageHelper
 		let str = ""
 		let confidence = 0
 
-		let chars = this.extractPlayerGlyphs()
+		let chars = this.clone().extractPlayerGlyphs()
 		for (let c = 0; c < chars.length; c++)
 		{
 			const char = chars[c]
@@ -1187,7 +1283,7 @@ class ImageHelper
 		let str = ""
 		let confidence = 0
 
-		let chars = this.extractScoreGlyphs()
+		let chars = this.clone().extractScoreGlyphs()
 		for (let c = 0; c < chars.length; c++)
 		{
 			const char = chars[c]

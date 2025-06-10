@@ -37,12 +37,12 @@ function beginTests(kind)
 
 function testImage(workers, table, img, sample, kind)
 {
-	img = img.stretchTo(1280, 720)
-	
+	console.log("testImage", sample.src)
+	let { players, scores } = img.extractRegionsOfInterest()
+
 	switch (kind)
 	{
 		case "name":
-			let players = img.extractPlayers(false)
 			for (let p = 0; p < players.length; p++)
 			{
 				testNum += 1
@@ -51,7 +51,6 @@ function testImage(workers, table, img, sample, kind)
 			break
 			
 		case "score":
-			let scores = img.extractScores(false)
 			for (let p = 0; p < scores.length; p++)
 			{
 				testNum += 1
@@ -147,7 +146,6 @@ function addResult(data, kind)
 	refreshInfo()
 	
 	let img = Object.assign(new ImageHelper(), data.img)
-	let imgOriginal = Object.assign(new ImageHelper(), data.imgOriginal)
 	
 	let tr = document.createElement("tr")
 	
@@ -172,7 +170,7 @@ function addResult(data, kind)
 			{
 				console.log("\"" + data.name + "\"")
 				let worker = new Worker("src/worker_name.js")
-				worker.postMessage({ kind: "name", img: imgOriginal, debug: true, nameGlyphs: nameGlyphs })
+				worker.postMessage({ kind: "name", img: img, debug: true, nameGlyphs: nameGlyphs })
 			}
 			break
 			
@@ -181,7 +179,7 @@ function addResult(data, kind)
 			{
 				console.log("\"" + data.score + "\"")
 				let worker = new Worker("src/worker_name.js")
-				worker.postMessage({ kind: "score", img: imgOriginal, debug: true, scoreGlyphs: scoreGlyphs })
+				worker.postMessage({ kind: "score", img: img, debug: true, scoreGlyphs: scoreGlyphs })
 			}
 			break
 	}

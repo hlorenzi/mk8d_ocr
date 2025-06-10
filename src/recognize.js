@@ -23,10 +23,7 @@ function recognizeResults(div, img)
 	let table = document.createElement("table")
 	div.appendChild(table)
 	
-	img = img.stretchTo(1920, 1080)
-	
-	let players = img.extractPlayers(false)
-	let scores = img.extractScores(false)
+	let { players, scores } = img.extractRegionsOfInterest()
 	//let flags = img.extractFlags(false)
 	for (let p = 0; p < players.length; p++)
 	{
@@ -75,7 +72,7 @@ function recognizeResults(div, img)
 				//case "flag":  span2.innerHTML = ev.data.flag; break
 			}
 			
-			if (finishedNum == 12 * 3)
+			if (finishedNum == players.length + scores.length)
 				printSample()
 		}
 		
@@ -95,7 +92,6 @@ function recognizeResults(div, img)
 		
 		worker.postMessage({ kind: "name",  img: players[p], nameGlyphs: nameGlyphs,   userdata: { index: p } })
 		worker.postMessage({ kind: "score", img: scores[p],  scoreGlyphs: scoreGlyphs, userdata: { index: p } })
-		//worker.postMessage({ kind: "flag",  img: flags[p],   flagData: flagData,       userdata: { index: p } })
 	}
 }
 

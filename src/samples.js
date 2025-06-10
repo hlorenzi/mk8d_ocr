@@ -1,62 +1,42 @@
 let samples =
 [
-	{ src: "samples/sample (1).jpg",
-		names: ["ボノドゾゴォ","ざじずぜぞごげぐぎが","きしちにぴみりをあか","vƒ◆Yoshi-ぇ","[WUT]BenC★","Gamer Bro","[WUT]Jack","BRUC€ U","Maadi","Maadi","",""],
-		scores: [46,130,35,455,18,161,6,276,2,1,0,0] },
-	
-	{ src: "samples/sample (2).jpg",
-		names: ["BL★Clarf♪","BL★Lorenzi","Nuru","Karii","tony28esco","D4","Hjortur","Player","Matthew","donglekang","Spaghetti","flapjacks"],
-		scores: [9997,11495,13749,1232,1390,1317,1323,1051,1231,1012,4067,998] },
-	
-	{ src: "samples/sample (5).jpg",
-		names: ["BL★Lorenzi","Dαγ","cafe","Ð¥◎アルフレド","BL★x² - UP","もぐ","らいらい♪","2nd!ひいらぎ","*.*","RomanDogg","ひ","☆Sal☆"],
-		scores: [11802,13147,9928,9695,10160,10140,10313,10040,14429,3199,16634,8272] },
-	
-	{ src: "samples/sample (9).jpg",
-		names: ["ßεαst","IWant2Die","BL · Fox04k","GoBowserJr","BL★Lorenzi","BL 3-UP","PARMESAN","AU★Shii","Coco","Zeeker","pavel","James"],
-		scores: [32547,15478,13078,18943,12444,16567,15077,10262,1093,1397,3056,4769] },
-	
-	{ src: "samples/sample (11).jpg",
-		names: ["ze espurr","Red","Princess","BL★Lorenzi","Kimberly","Shelby","Mituo","オクト☆パスタ♪","Pauly P","JackAttack","",""],
-		scores: [1743,2819,4725,5555,2233,2412,4148,1622,2972,838,0,0] },
-	
-	{ src: "samples/sample (13).jpg",
-		names: ["xı SHARK","xı GunShow","xı cynda","xı Kurumi","xı pyrus","ARC WOR A","ARC 【ケヴィン】","ARC Charly","ARC Sayan","ARC〃Jaкe","ARC hope","xı f"],
-		scores: [115,111,93,92,88,78,75,74,71,68,64,55] },
-	
-	{ src: "samples/sample (15).jpg",
-		names: ["Aλεξ","soepita","はるっち","こうすけ","いけめん","ちゅーりっぷ","ジャグラー","まんじですけど","てんしんらんまん","わたあめ","S★みく","りんゴ"],
-		scores: [9043,10943,2527,9178,11186,9830,9540,10135,9757,1058,9489,9560] },
-	
-	{ src: "samples/sample (16).jpg",
-		names: ["msv Pyrax","msv L.","msvLALINEA","ÐVP Twonk","msv Mars","ÐVP egirls","ÐVPolice","msv d","ÐVP Ayano","ÐVP Talent","msv◇ Bry","ÐVP Enel"],
-		scores: [109,104,93,92,87,86,82,77,68,64,57,8] },
-	
-	{ src: "samples/sample (17).jpg",
-		names: ["BL pb&j","м¢ brandon","BL Civil","м¢Bullseye","BL 3-UP","м¢★J","м¢ Leon","BL パップ","м¢ Squidz","м¢ DARKEEE","BL★Comic","BL"],
-		scores: [116,111,95,89,89,75,69,63,51,34,18,1] },
-	
-	{ src: "samples/sample (48).jpg",
-		names: ["Anktendo","はると","イカ","syamu game","まりかかずまるくす","[S]sky","Ace√だじょ〜〜","スーパーハゲヤマデス","PAG☆sosora","150ビクブル12い","BB-8","サタン"], 
-		scores: [262,14,93,60,131,9,115,57,562,110,73,244] },
-	
-	{ src: "samples/sample (49).jpg",
-		names: ["ゆきさん","アイ","☆れいむ☆","Noah","<3 Gorilla","それはちがうよ · · ·","ハヤプサ","Hi. Hello.","Evil Peter","Nashi","[BIG]HEYEA","なんじゃこれは"], 
-		scores: [21729,16736,45012,21350,10247,12210,19548,9054,1696,18640,8840,21957] },
-	
-	{ src: "samples/sample (51).jpg",
-		names: ["Infinity.R","Infinity.ロ","Infinity.v","すーはーとるみかいし","てつやまん","Infinity.B","Dr.マシリト","Infinity.ア","ゆうにや","Infinity*ク","Mimi*Lunar","あらぶるとくも"],
-		scores: [113,102,94,89,87,86,83,79,74,69,60,48] },
-	
-	{ src: "samples/sample (52).jpg",
-		names: ["Ejy*Berry","Ejy*Kerry","3★LostLove","カオスなみつを","3★Lorenzi","カオスなチェリー","わくわく♪なおや","カオスなLiz","Ejy*Merry","3★KitKat","わくわくゆたか","わくわく♪ビートル"],
-		scores: [139,104,99,96,87,85,82,70,61,49,33,12] },
-	
-	{ src: "samples/sample (53).jpg",
-		names: ["iD Thimo","iD★Jουβακ","iD 3-UP","iD☆rubyy","iD j♪","И>Borjilet","И☆Aketx☆","{И}Kabkal","И★ *rams*","И★BooSnow","",""],
-		scores: [101,74,62,68,71,63,69,49,34,47,0,0] },
-		
-	{ src: "samples/sample (54).jpg",
-		names: ["Obi-Wan","Tony","Sir Paul","Grivao","ŤßÐ★Mel","Taizz","Abi","LiriLP","Martine","Shrine","SubZero515","Laila"], 
-		scores: [90001,43984,66565,1033,6595,1017,1075,1427,1002,1086,1716,669] },
+	{ src: "samples/1.png",
+		names: ["Waluigi","Mario","Bowser","Baby Peach","Bowser Jr.","Cow","Yoshi","Koopa Troopa","Monty Mole","Sidestepper","Baby Daisy","Toadette","Cheep Cheep"], 
+		scores: [15,12,10,9,9,8,8,7,7,6,6,6,5] },
+
+	{ src: "samples/2.png",
+		names: ["Waluigi","Mario","Bowser Jr.","Bowser","Baby Peach","Koopa Troopa","Cow","Yoshi","Monty Mole","Sidestepper","Baby Daisy","Toadette","Dolphin"], 
+		scores: [30,24,19,19,17,16,16,15,14,12,12,12,10] },
+
+	{ src: "samples/3.png",
+		names: ["DEFENRX45","Cam0v0","Matt","Swiftjar","newcozkjy","kingofswag","JookSenpai","kohltrain","James","Mario","Cej420","Daddo","RetroMaggs"], 
+		scores: [3961,3539,0,4316,3242,3201,3176,3784,3917,3716,3438,3044,3052] },
+
+	{ src: "samples/4.png",
+		names: ["Nick","Kai","Mario","Nick","ZAGAT117","Midnightay","Jay","Mickey","Cej420","Swiftjar","James","lili","Blood"], 
+		scores: [5345,3783,3433,0,5533,4480,3535,3914,3351,3171,3140,4038,3083] },
+
+	{ src: "samples/5.png",
+		names: ["JPGiviner","royal","pyrus","Walnut","Mase","せばすちゃん","さくお","ずみん","FdP*JimC","Tynan","おもち","ぎょし","Son unique"], 
+		scores: [3523,3102,3586,3159,3084,5709,4426,3066,3063,5713,6473,3045,4254] },
+
+	{ src: "samples/6.png",
+		names: ["pyrus","せばすちゃん","まろ","royal","オウGビーフ","ぎょし","みや","ゆう","FdP*JimC","Tynan","ずみん","さくお","JPGiviner"], 
+		scores: [4178,5986,3296,3687,3168,3379,6062,4297,3399,5847,3424,4703,3987] },
+
+	{ src: "samples/7.png",
+		names: ["なり。","royal","Mase","pyrus","Tynan","ふうしゆう","lolwut","でんじΩ","ミラクルパパイヤGO","GoVi","おむす","FdP*JimC","JPGiviner"], 
+		scores: [3590,5246,4358,4668,6308,3385,377,4716,6690,3802,6017,4365,4730] },
+
+	{ src: "samples/8.jpg",
+		names: ["もあ","ボンドルド","","シャンダイ","う","ねれ","oji","Menorah","Gotan","Enami Asa","r","れむりー","Béluga"], 
+		scores: [9232,9208,8805,8567,9097,8924,8601,8592,8065,8551,8321,8510,8765] },
+
+	{ src: "samples/9.png",
+		names: ["HZ★Dake","sω","sι Miku","sι♪JustTut","HZ★Proman","HZ★Slak","HZ Max","HZ★Yuna","HZ★Julian","ωh☆Hope","sι Xiconnu","sω♪klarn",""], 
+		scores: [118,106,104,75,103,79,41,51,92,27,74,75,0] },
+
+	{ src: "samples/10.png",
+		names: ["sω Xiconnu","sω Miku","κω","sω Nadzaa","κω βαβασ","κω' Vince","sω♪klarn","sω♪JustBag","κω Eli","κω Kil","κω'·Mαtραc","sω☆Hope",""], 
+		scores: [127,125,109,96,91,78,75,74,57,57,48,47,0] },
 ]

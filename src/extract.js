@@ -10,31 +10,17 @@ function setImage(input)
 	
 	let extractNames = document.getElementById("radioNames").checked
 	let extractScores = document.getElementById("radioScores").checked
-	let extractFlags = document.getElementById("radioFlags").checked
-	let joinGlyphs = document.getElementById("checkboxSpaces").checked
 	
-	let isMKWorld = document.getElementById("radioMKWorld").checked
-	let isMK8DX = document.getElementById("radioMK8DX").checked
-
 	ImageHelper.fromSrc(inputGetImageSrc(input), (img) =>
 	{
-		img = img.stretchTo(1920, 1080)
-		
 		while (div.firstChild)
 			div.removeChild(div.firstChild)
 		
 		let table = document.createElement("table")
+		let { players, scores } = img.extractRegionsOfInterest()
 		
-		/*if (extractFlags)
-		{
-			let flags = img.extractFlags()
-			for (let flag of flags)
-				addToTable(table, flag)
-		}
-		else*/
 		if (extractScores)
 		{
-			let scores = img.extractScores()
 			for (let score of scores)
 			{
 				let glyphs = score.extractScoreGlyphs()
@@ -45,10 +31,9 @@ function setImage(input)
 		}
 		else
 		{
-			let players = img.extractPlayers()
 			for (let player of players)
 			{
-				let glyphs = player.extractPlayerGlyphs(joinGlyphs)
+				let glyphs = player.extractPlayerGlyphs()
 				for (const glyph of glyphs)
 					for (const subglyph of glyph)
 						addToTable(table, subglyph)

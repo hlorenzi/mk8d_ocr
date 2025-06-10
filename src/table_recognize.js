@@ -163,8 +163,6 @@ function recognizeImage(workers, table, img)
 	warningCanFlash = false
 	refreshInputData()
 	
-	img = img.stretchTo(1280, 720)
-	
 	let canvas = document.getElementById("canvasInput")
 	let ctx = canvas.getContext("2d")
 	ctx.drawImage(img.makeCanvas(), 0, 0, 1280, 720)
@@ -249,9 +247,6 @@ function parseIntSafe(str)
 
 function* extractFromImage(img)
 {
-	yield 0
-	
-	img = img.stretchTo(1280, 720)
 	yield 0
 	
 	let players = img.extractPlayers(false)
