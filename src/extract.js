@@ -89,10 +89,9 @@ function buildData()
 {
 	let extractNames = document.getElementById("radioNames").checked
 	let extractScores = document.getElementById("radioScores").checked
-	let extractFlags = document.getElementById("radioFlags").checked
 	
-	let array = (extractFlags ? flagData : (extractScores ? scoreGlyphs : nameGlyphs))
-	let arrayName = (extractFlags ? "flagData" : (extractScores ? "scoreGlyphs" : "nameGlyphs"))
+	let array = (extractScores ? scoreGlyphs : nameGlyphs)
+	let arrayName = (extractScores ? "scoreGlyphs" : "nameGlyphs")
 	
 	for (let i = 0; i < charImages.length; i++)
 	{
@@ -119,7 +118,7 @@ function buildData()
 		str += "\t{ "
 		if (entry.skip) str += "skip: true, "
 		str += "c: " + JSON.stringify(entry.c) + ", "
-		str += "data: " + (extractFlags ? entry.data.toJson() : entry.data.toJsonBinarized()) + " }"
+		str += "data: " + entry.data.toJsonBinarized() + " }"
 	}
 	
 	str += "\n]"

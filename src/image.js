@@ -281,6 +281,8 @@ class ImageHelper
 		let canvas = document.createElement("canvas")
 		canvas.width = this.imageData.width
 		canvas.height = this.imageData.height
+		canvas.style.width = `${canvas.width / window.devicePixelRatio}px`
+		canvas.style.height = `${canvas.height / window.devicePixelRatio}px`
 
 		let ctx = canvas.getContext("2d")
 		ctx.putImageData(this.imageData, 0, 0)
@@ -339,18 +341,32 @@ class ImageHelper
 	
 	displace(xTop, yTop)
 	{
-		let newImage = this.clone()
+		let newImage = ImageHelper.empty(this.imageData.width, this.imageData.height)//this.clone()
 		
-		for (let y = 0; y < this.imageData.height; y++)
-			for (let x = 0; x < this.imageData.width; x++)
-				newImage.setPixel(x, y, 0, 0, 0, 255)
+		//for (let y = 0; y < this.imageData.height; y++)
+		//	for (let x = 0; x < this.imageData.width; x++)
+		//		newImage.setPixel(x, y, 0, 0, 0, 255)
 		
 		for (let y = 0; y < this.imageData.height; y++)
 		{
 			for (let x = 0; x < this.imageData.width; x++)
 			{
-				let fromPixel = this.getPixel(x, y)
-				newImage.setPixel(xTop + x, yTop + y, fromPixel.r, fromPixel.g, fromPixel.b, 255)
+				const srcIndex = this.dataIndex(x, y)
+
+				const destX = xTop + x
+				const destY = yTop + y
+				const destIndex = newImage.dataIndex(destX, destY)
+				
+				if (destX < 0 || destY < 0 || destX >= newImage.imageData.width || destY >= newImage.imageData.height)
+					continue
+				
+				newImage.imageData.data[destIndex + 0] = this.imageData.data[srcIndex + 0]
+				newImage.imageData.data[destIndex + 1] = this.imageData.data[srcIndex + 1]
+				newImage.imageData.data[destIndex + 2] = this.imageData.data[srcIndex + 2]
+				newImage.imageData.data[destIndex + 3] = this.imageData.data[srcIndex + 3]
+
+				//let fromPixel = this.getPixel(x, y)
+				//newImage.setPixel(xTop + x, yTop + y, fromPixel.r, fromPixel.g, fromPixel.b, 255)
 			}
 		}
 		
@@ -388,7 +404,7 @@ class ImageHelper
 	findProbableLetterBase()
 	{
 		let heights = []
-		for (let y = this.imageData.height - 5; y >= this.imageData.height / 3 * 2; y--)
+		for (let y = this.imageData.height - 1; y >= this.imageData.height / 3 * 2; y--)
 			heights[y] = 0
 		
 		for (let x = 0; x < this.imageData.width; x++)
@@ -410,7 +426,7 @@ class ImageHelper
 		
 		let maxCount = 0
 		let result = 0
-		for (let y = this.imageData.height - 5; y >= this.imageData.height / 3 * 2; y--)
+		for (let y = this.imageData.height - 1; y >= this.imageData.height / 3 * 2; y--)
 		{
 			//console.log("height[" + y + "] = " + heights[y])
 			if (heights[y] > maxCount)
@@ -422,16 +438,6 @@ class ImageHelper
 		
 		//console.log("letterbase: " + result)
 		return result
-		
-		/*let accum = 0
-		let count = 0
-		for (let y = this.imageData.height - 5; y >= this.imageData.height / 3 * 2; y--)
-		{
-			accum += y * heights[y]
-			count += heights[y]
-		}
-		
-		return Math.round(accum / count)*/
 	}
 	
 	
@@ -469,11 +475,12 @@ class ImageHelper
 		for (let i = 0; i < players.length; i++)
 		{
 			const isYellowBkg = players[i].regionProximity(0, 0, 170, 5, 255, 214, 32) > 0.8
-			const isRedBkg = players[i].regionProximity(0, 0, 170, 5, 194, 29, 0) > 0.85
-			const isBlueBkg = players[i].regionProximity(0, 0, 170, 5, 20, 95, 212) > 0.85
+			const redBkgFactor = players[i].regionProximity(0, 0, 170, 5, 194, 29, 0)
+			const isRedBkg = redBkgFactor > 0.8
+			const isBlueBkg = players[i].regionProximity(0, 0, 170, 5, 20, 95, 212) > 0.8
 			const whiteLetterFactor = players[i].regionContains(6, 24, 16, 16, 255, 255, 255, 0.8)
 			const isWhiteLetters = whiteLetterFactor > 0
-			console.log("player", i, "color", isYellowBkg, isRedBkg, isBlueBkg, isWhiteLetters, whiteLetterFactor)
+			console.log("player", i, "color", isYellowBkg, isRedBkg, redBkgFactor, isBlueBkg, isWhiteLetters, whiteLetterFactor)
 			
 			if (isYellowBkg)
 			{
@@ -1084,137 +1091,7 @@ class ImageHelper
 		return score
 	}
 	
-	
-	disambiguateGlyphI(x, w, debug = false)
-	{
-		let width = 1
-		for (let y = 0; y < this.imageData.height; y++)
-			width = Math.max(width, this.getRegionFilling(x, y, w, 1, false))
-		
-		let smallISep =
-			this.getRegionFilling(x, 17, w, 1, false) < Math.ceil(width / 2) ||
-			this.getRegionFilling(x, 18, w, 1, false) < Math.ceil(width / 2) ||
-			this.getRegionFilling(x, 19, w, 1, false) < Math.ceil(width / 2)
-			
-		let smallDotlessITittle =
-			this.getRegionFilling(x, 12, w, 1, false) == 0 &&
-			this.getRegionFilling(x, 13, w, 1, false) == 0 &&
-			this.getRegionFilling(x, 14, w, 1, false) == 0 &&
-			this.getRegionFilling(x, 15, w, 1, false) == 0
-			
-		let exclamationSep =
-			this.getRegionFilling(x, 27, w, 1, false) < Math.ceil(width / 2) ||
-			this.getRegionFilling(x, 28, w, 1, false) < Math.ceil(width / 2)
-			
-		if (debug)
-		{
-			console.log(
-				"width(" + width + ") " +
-				"smallISep(" + smallISep + ") " +
-				"smallDotlessITittle(" + smallDotlessITittle + ") " +
-				"exclamationSep(" + exclamationSep + ")")
-		}
-			
-		if (exclamationSep && !smallISep)
-			return "!"
-			
-		if (smallISep && smallDotlessITittle)
-			return "ı"
-		
-		if (smallISep)
-			return "i"
-		
-		return "l"
-	}
-	
-	
-	recognizeDigit(xPen, debug = false)
-	{
-		let scores = []
-		
-		for (let x = -1; x <= 3; x++)
-		{
-			let u   = this.getRegionFilling(x + xPen + 6,  16, 7, 3)
-			let ul  = this.getRegionFilling(x + xPen + 3,  18, 3, 7)
-			let ur  = this.getRegionFilling(x + xPen + 14, 18, 3, 7)
-			let m   = this.getRegionFilling(x + xPen + 6,  25, 7, 3)
-			let bl  = this.getRegionFilling(x + xPen + 3,  27, 3, 7)
-			let br  = this.getRegionFilling(x + xPen + 14, 27, 3, 7)
-			let b   = this.getRegionFilling(x + xPen + 6,  34, 7, 3)
-			let one = this.getRegionFilling(x + xPen + 9,  18, 4, 14)
-			
-			let max = Math.max(u, ul, ur, m, bl, br, b, one)
-			
-			if (debug)
-				console.log(
-					"max: " + max.toFixed(2) + ", " +
-					"segments: [" +
-					" u: " + (u  .toFixed(2)) + ", " +
-					"ul: " + (ul .toFixed(2)) + ", " +
-					"ur: " + (ur .toFixed(2)) + ", " +
-					" m: " + (m  .toFixed(2)) + ", " +
-					"bl: " + (bl .toFixed(2)) + ", " +
-					"br: " + (br .toFixed(2)) + ", " +
-					" b: " + (b  .toFixed(2)) + ", " +
-					" 1: " + (one.toFixed(2)) + "]")
-					
-			let has = (x) => x
-			let not = (x) => 1 - x
-			
-			scores.push({ x: x, digit: 0, score: has(u) + has(ul) + has(ur) + not(m) + has(bl) + has(br) + has(b) + not(one) })
-			scores.push({ x: x, digit: 1, score: not(u) + not(ul) + not(ur) + not(m) + not(bl) + not(br) + not(b) + has(one) - 1 })
-			scores.push({ x: x, digit: 2, score: has(u) + not(ul) + has(ur) + has(m) + has(bl) + not(br) + has(b) + not(one) })
-			scores.push({ x: x, digit: 3, score: has(u) + not(ul) + has(ur) + has(m) + not(bl) + has(br) + has(b) + not(one) })
-			scores.push({ x: x, digit: 4, score: not(u) + has(ul) + has(ur) + has(m) + not(bl) + has(br) + not(b) + not(one) })
-			scores.push({ x: x, digit: 5, score: has(u) + has(ul) + not(ur) + has(m) + not(bl) + has(br) + has(b) + not(one) })
-			scores.push({ x: x, digit: 6, score: has(u) + has(ul) + not(ur) + has(m) + has(bl) + has(br) + has(b) + not(one) })
-			scores.push({ x: x, digit: 7, score: has(u) + not(ul) + has(ur) + not(m) + not(bl) + has(br) + not(b) + not(one) })
-			scores.push({ x: x, digit: 8, score: has(u) + has(ul) + has(ur) + has(m) + has(bl) + has(br) + has(b) + not(one) })
-			scores.push({ x: x, digit: 9, score: has(u) + has(ul) + has(ur) + has(m) + not(bl) + has(br) + has(b) + not(one) })
-		}
-		
-		scores.sort((a, b) => b.score - a.score)
-		
-		if (debug)
-		{
-			for (let entry of scores)
-				console.log("x(" + entry.x.toString().padStart(2) + "), digit " + entry.digit + ", score: " + entry.score.toFixed(2).padStart(5))
-		}
-		
-		return scores[0].digit
-	}
-	
-	
-	scoreFlag(flag, debug = false)
-	{
-		let result = 0
-		for (let y = 0; y < this.imageData.height; y++)
-		{
-			for (let x = 0; x < this.imageData.width; x++)
-			{
-				let index = (y * this.imageData.width + x) * 4
-				
-				result += ImageHelper.colorProximity(
-					this.imageData.data[index + 0],
-					this.imageData.data[index + 1],
-					this.imageData.data[index + 2],
-					flag.data.imageData.data[index + 0],
-					flag.data.imageData.data[index + 1],
-					flag.data.imageData.data[index + 2])
-			}
-		}
-		
-		let score = result / (this.imageData.width * this.imageData.height)
-		
-		if (debug)
-			console.log(
-				"\"" + flag.c + "\" " +
-				"score(" + score.toFixed(5).padStart(8) + ")")
-			
-		return score
-	}
-	
-	
+
 	recognizePlayer(debug = false)
 	{
 		this.createCache()
@@ -1332,9 +1209,9 @@ class ImageHelper
 		
 		let value = parseInt(str)
 		if (!isFinite(value))
-			return 0
+			return { value: 0, confidence: 0 }
 
-		return value
+		return { value: value, confidence: confidence }
 	}
 	
 	

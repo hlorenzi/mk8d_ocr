@@ -18,30 +18,28 @@ onmessage = (ev) =>
 			for (let i = 0; i < nameGlyphs.length; i++)
 				nameGlyphs[i].data = Object.assign(new ImageHelper(), nameGlyphs[i].data)
 			
-			let names = []
-			names.push(img.recognizePlayer(ev.data.debug))
+			let letterBase = img.findProbableLetterBase()
+			let letterBaseOffset = letterBase - 36
 			
-			if (names[0].confidence <= 0)
+			let attempts = []
+
+			//if (names[0].confidence <= 0)
+			for (let y = -2; y <= 2; y++)
+				attempts.push(img.displace(0, y).recognizePlayer(ev.data.debug))
+
+			for (let y = letterBaseOffset - 2; y <= letterBaseOffset + 2; y++)
+				attempts.push(img.displace(0, y).recognizePlayer(ev.data.debug))
+			
+			attempts.sort((a, b) => b.confidence - a.confidence)
+			
+			if (ev.data.debug)
 			{
-				for (let y = -3; y <= 3; y++)
-				{
-					if (y == 0)
-						continue
-					
-					names.push(img.displace(0, y).recognizePlayer(ev.data.debug))
-				}
-			}
-			
-			names.sort((a, b) => b.confidence - a.confidence)
-			
-			if (ev.data.debug)
 				console.log("Recognition attempts:")
-			
-			if (ev.data.debug)
-				for (let name of names)
-					console.log("-- " + name.str + " (confidence: " + name.confidence + ")")
+				for (let attempt of attempts)
+					console.log("-- " + attempt.str + " (confidence: " + attempt.confidence + ")")
+			}
 						
-			postMessage({ img: img.clone(), kind: ev.data.kind, name: names[0].str, userdata: ev.data.userdata })
+			postMessage({ img: img.clone(), kind: ev.data.kind, name: attempts[0].str, userdata: ev.data.userdata })
 			break
 		}
 		
@@ -49,8 +47,28 @@ onmessage = (ev) =>
 		{
 			for (let i = 0; i < scoreGlyphs.length; i++)
 				scoreGlyphs[i].data = Object.assign(new ImageHelper(), scoreGlyphs[i].data)
+
+			let letterBase = img.findProbableLetterBase()
+			let letterBaseOffset = letterBase - 37
 			
-			postMessage({ img: img.clone(), kind: ev.data.kind, score: img.recognizeScore(ev.data.debug), userdata: ev.data.userdata })
+			let attempts = []
+
+			for (let y = -2; y <= 2; y++)
+				attempts.push(img.displace(0, y).recognizeScore(ev.data.debug))
+
+			for (let y = letterBaseOffset - 2; y <= letterBaseOffset + 2; y++)
+				attempts.push(img.displace(0, y).recognizeScore(ev.data.debug))
+			
+			attempts.sort((a, b) => b.confidence - a.confidence)
+			
+			if (ev.data.debug)
+			{
+				console.log("Recognition attempts:")
+				for (let attempt of attempts)
+					console.log("-- " + attempt.value + " (confidence: " + attempt.confidence + ")")
+			}
+
+			postMessage({ img: img.clone(), kind: ev.data.kind, score: attempts[0].value, userdata: ev.data.userdata })
 			break
 		}
 	}

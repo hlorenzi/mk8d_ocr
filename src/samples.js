@@ -39,4 +39,8 @@ let samples =
 	{ src: "samples/10.png",
 		names: ["sω Xiconnu","sω Miku","κω","sω Nadzaa","κω βαβασ","κω' Vince","sω♪klarn","sω♪JustBag","κω Eli","κω Kil","κω'·Mαtραc","sω☆Hope",""], 
 		scores: [127,125,109,96,91,78,75,74,57,57,48,47,0] },
+
+	{ src: "samples/15.png",
+		names: ["sω SmyLee","sω♪JustTut","NFO☆Leo'","sω Miku","NFO MH","sω♪klarn","NFO ωαεηστ","NFO aexo.","NFO Skail","sω Nadzaa","sω Xiconnu","NFO Zocka",""], 
+		scores: [31,35,37,18,22,10,19,12,14,16,12,20,0] },
 ]
