@@ -545,6 +545,16 @@ class ImageHelper
 				break
 
 			let pixels = this.findConnectedRegion(pBegin.x, pBegin.y, 1, -0.1, 40)
+			if (pixels.length === 0)
+				break
+
+			if (pixels.length < 10)
+			{
+				this.fillPixels(pixels, 0, 0, 0)
+				x = pBegin.x - 15
+				continue
+			}
+
 			let charImage = this.extractPixels(pixels)
 			if (charImage == null)
 				break
@@ -592,6 +602,16 @@ class ImageHelper
 				break
 
 			let pixels = this.findConnectedRegion(pBegin.x, pBegin.y, 1, 0, 40)
+			if (pixels.length === 0)
+				break
+			
+			if (pixels.length < 10)
+			{
+				this.fillPixels(pixels, 0, 0, 0)
+				x = pBegin.x - 15
+				continue
+			}
+
 			let charImage = this.extractPixels(pixels)
 			if (charImage == null)
 				break
@@ -671,6 +691,22 @@ class ImageHelper
 				this.imageData.data[i * 4 + 2])
 
 			if (proximity > threshold)
+				result += 1
+		}
+		
+		return result
+	}
+	
+	
+	regionCountBinary(x1, y1, w, h, value)
+	{
+		let result = 0
+		for (let yy = y1; yy < y1 + h; yy++)
+		for (let xx = x1; xx < x1 + w; xx++)
+		{
+			let i = (yy * this.imageData.width + xx)
+			
+			if (this.imageData.data[i * 4 + 0] === (value ? 255 : 0))
 				result += 1
 		}
 		
@@ -767,8 +803,8 @@ class ImageHelper
 		{
 			xMin = Math.min(xMin, p.x)
 			yMin = Math.min(yMin, p.y)
-			xMax = Math.max(xMax, p.x)
-			yMax = Math.max(yMax, p.y)
+			xMax = Math.max(xMax, p.x + 1)
+			yMax = Math.max(yMax, p.y + 1)
 		}
 
 		if (xMax < 0 ||
@@ -1070,7 +1106,7 @@ class ImageHelper
 				if (x < 0 || y < 0 || x >= glyph.data.imageData.width || y >= glyph.data.imageData.height)
 					dist2 = 0
 
-				let factor = Math.max(1, dist1) * Math.max(1, dist2)
+				let factor = Math.min(2, Math.max(1, dist1)) * Math.min(2, Math.max(1, dist2))
 				//Math.min(4, Math.max(0, Math.max(dist1, dist2) - 2))
 
 				totalPixels += factor
@@ -1092,7 +1128,7 @@ class ImageHelper
 	}
 	
 
-	recognizePlayer(debug = false)
+	recognizePlayer(nameGlyphs, debug = false)
 	{
 		this.createCache()
 		
@@ -1148,12 +1184,50 @@ class ImageHelper
 			confidence += (chosen.score)
 			c += chosen.advance
 		}
+
+
+		if (confidence < 0)
+			return { str: "", confidence: 0 }
+
+		const filledPixels = this.regionCountBinary(0, 0, this.imageData.width, this.imageData.height, true)
+		if (confidence > 0 && confidence / filledPixels < 0.0005)
+			return { str: "", confidence: filledPixels / 500 }
+
+
+		let isUppercase = (c) => {
+			if (c == null)
+				return false
+			
+			c = c.charCodeAt(0)
+			
+			return c >= "A".charCodeAt(0) && c <= "Z".charCodeAt(0)
+		}
 		
+		let replaceChar = (str, index, c) => {
+			return str.substr(0, index) + c + str.substr(index + c.length)
+		}
+		
+		for (let i = 0; i < str.length; i++)
+		{
+			let c = str[i]
+			if (c != "l" && c != "I")
+				continue
+			
+			let prev = (i > 0 ? str[i - 1] : null)
+			let next = (i < str.length - 1 ? str[i + 1] : null)
+			
+			if (c == "l" && isUppercase(next))
+				str = replaceChar(str, i, "I")
+			
+			else if (c == "I" && (!isUppercase(prev) || !isUppercase(next)))
+				str = replaceChar(str, i, "l")
+		}
+
 		return { str: str, confidence: confidence }
 	}
 	
 	
-	recognizeScore(debug = false)
+	recognizeScore(scoreGlyphs, debug = false)
 	{
 		this.createCache()
 		
@@ -1208,8 +1282,13 @@ class ImageHelper
 		}
 		
 		let value = parseInt(str)
-		if (!isFinite(value))
+		if (!isFinite(value) || confidence < 0)
 			return { value: 0, confidence: 0 }
+
+		const filledPixels = this.regionCountBinary(0, 0, this.imageData.width, this.imageData.height, true)
+		//console.log(value, confidence, filledPixels, confidence / filledPixels)
+		if (confidence > 0 && confidence / filledPixels < 0.00001)
+			return { value: 0, confidence: filledPixels / 200 }
 
 		return { value: value, confidence: confidence }
 	}

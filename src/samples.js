@@ -10,7 +10,7 @@ let samples =
 
 	{ src: "samples/3.png",
 		names: ["DEFENRX45","Cam0v0","Matt","Swiftjar","newcozkjy","kingofswag","JookSenpai","kohltrain","James","Mario","Cej420","Daddo","RetroMaggs"], 
-		scores: [3961,3539,0,4316,3242,3201,3176,3784,3917,3716,3438,3044,3052] },
+		scores: [3961,3539,0,4316,3242,3201,3176,3784,3917,3716,3738,3044,3052] },
 
 	{ src: "samples/4.png",
 		names: ["Nick","Kai","Mario","Nick","ZAGAT117","Midnightay","Jay","Mickey","Cej420","Swiftjar","James","lili","Blood"], 
@@ -26,7 +26,7 @@ let samples =
 
 	{ src: "samples/7.png",
 		names: ["なり。","royal","Mase","pyrus","Tynan","ふうしゆう","lolwut","でんじΩ","ミラクルパパイヤGO","GoVi","おむす","FdP*JimC","JPGiviner"], 
-		scores: [3590,5246,4358,4668,6308,3385,377,4716,6690,3802,6017,4365,4730] },
+		scores: [3590,5246,4358,4668,6308,3385,3771,4716,6690,3802,6017,4365,4730] },
 
 	{ src: "samples/8.jpg",
 		names: ["もあ","ボンドルド","","シャンダイ","う","ねれ","oji","Menorah","Gotan","Enami Asa","r","れむりー","Béluga"], 
@@ -43,4 +43,20 @@ let samples =
 	{ src: "samples/15.png",
 		names: ["sω SmyLee","sω♪JustTut","NFO☆Leo'","sω Miku","NFO MH","sω♪klarn","NFO ωαεηστ","NFO aexo.","NFO Skail","sω Nadzaa","sω Xiconnu","NFO Zocka",""], 
 		scores: [31,35,37,18,22,10,19,12,14,16,12,20,0] },
+
+	{ src: "samples/17.png",
+		names: ["sω Miku","sω SmyLee","sω Xiconnu","YQ Connor","sωMattias","YQ Lucer","YQ robin","sω★Swayz","YQαlanbead","sω♪JustTut","YQ wadar","YQ Infi",""], 
+		scores: [101,96,92,118,78,93,49,79,69,71,64,74,0] },
+
+	{ src: "samples/18.png",
+		names: ["luckyo !","Markus","Letho","Aki","Sorata","Toad","Vantox","Obiyo","YQ Connor","Rayzopp","Pottary","★Alexal",""], 
+		scores: [115,104,91,88,88,83,73,73,72,72,70,55,0] },
+
+	{ src: "samples/19.png",
+		names: ["BDD Patel","BDD DropB","ARC Blue","ARC Geddy","ARC Ty","ARC:ranran","ARC Arti","ARC Hu Tao","BDD Penny","BDD Lazy","BDD Badder","BDD Tyler",""], 
+		scores: [15,12,10,9,8,7,6,5,4,3,2,1,0] },
+
+	{ src: "samples/20.png",
+		names: ["YF cynthia","sω Nadzaa","sω Miku","YF Thib","YF Équinox","sω citystr","sω♪JustTut","YF Piero","sω♪klarn","YF ριlloν","sω SmyLee","YF Caaspar",""], 
+		scores: [112,56,90,70,67,98,68,94,64,68,58,111,0] },
 ]

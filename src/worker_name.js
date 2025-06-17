@@ -21,15 +21,17 @@ onmessage = (ev) =>
 			let letterBase = img.findProbableLetterBase()
 			let letterBaseOffset = letterBase - 36
 			
-			let attempts = []
-
-			//if (names[0].confidence <= 0)
+			let yDisplacements = new Set()
 			for (let y = -2; y <= 2; y++)
-				attempts.push(img.displace(0, y).recognizePlayer(ev.data.debug))
-
+				yDisplacements.add(y)
+				
 			for (let y = letterBaseOffset - 2; y <= letterBaseOffset + 2; y++)
-				attempts.push(img.displace(0, y).recognizePlayer(ev.data.debug))
-			
+				yDisplacements.add(y)
+
+			let attempts = []
+			for (let y of yDisplacements)
+				attempts.push(img.displace(0, y).recognizePlayer(nameGlyphs, ev.data.debug))
+
 			attempts.sort((a, b) => b.confidence - a.confidence)
 			
 			if (ev.data.debug)
@@ -51,14 +53,17 @@ onmessage = (ev) =>
 			let letterBase = img.findProbableLetterBase()
 			let letterBaseOffset = letterBase - 37
 			
-			let attempts = []
-
+			let yDisplacements = new Set()
 			for (let y = -2; y <= 2; y++)
-				attempts.push(img.displace(0, y).recognizeScore(ev.data.debug))
-
+				yDisplacements.add(y)
+				
 			for (let y = letterBaseOffset - 2; y <= letterBaseOffset + 2; y++)
-				attempts.push(img.displace(0, y).recognizeScore(ev.data.debug))
-			
+				yDisplacements.add(y)
+
+			let attempts = []
+			for (let y of yDisplacements)
+				attempts.push(img.displace(0, y).recognizeScore(scoreGlyphs, ev.data.debug))
+
 			attempts.sort((a, b) => b.confidence - a.confidence)
 			
 			if (ev.data.debug)
