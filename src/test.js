@@ -125,8 +125,8 @@ function addResult(data, kind)
 	{
 		case "name":
 		{
-			let compareRecognized = data.name.replace(/ /g, "")
-			let compareExpected = data.userdata.expected.replace(/ /g, "")
+			let compareRecognized = data.name //.replace(/ /g, "")
+			let compareExpected = data.userdata.expected //.replace(/ /g, "")
 			
 			let maxLen = Math.max(compareRecognized.length, compareExpected.length)
 			score = (maxLen == 0 ? 1 : 1 - levenshteinDistance(compareRecognized, compareExpected) / maxLen)

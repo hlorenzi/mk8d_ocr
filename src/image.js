@@ -448,85 +448,25 @@ class ImageHelper
 		const players = []
 		const scores = []
 
-		const isOnlineMatch = img.detectOnlineMatch()
-		console.log("isOnlineMatch", isOnlineMatch)
+		for (let i = 0; i < 12; i++)
+			players.push(img.extractRegion(420, 118 + 71 * i, 400, 38))
 
-		const isTeamMatch = img.detectTeamMatch()
-		console.log("isTeamMatch", isTeamMatch)
-
-		if (isOnlineMatch)
-		{
-			for (let i = 0; i < 13; i++)
-			{
-				players.push(img.extractRegion(1229, 54 + 77 * i, 350, 48))
-				scores.push(img.extractRegion(1725, 54 + 77 * i, 126, 48))
-			}
-			
-		}
-		else
-		{
-			for (let i = 0; i < 13; i++)
-			{
-				players.push(img.extractRegion(1272, 54 + 77 * i, 350, 48))
-				scores.push(img.extractRegion(1725, 54 + 77 * i, 90, 48))
-			}
-		}
+		for (let i = 0; i < 12; i++)
+			scores.push(img.extractRegion(940, 116 + 71 * i, 80, 44))
 		
 		for (let i = 0; i < players.length; i++)
-		{
-			const isYellowBkg = players[i].regionProximity(0, 0, 170, 5, 255, 214, 32) > 0.8
-			const redBkgFactor = players[i].regionProximity(0, 0, 170, 5, 194, 29, 0)
-			const isRedBkg = redBkgFactor > 0.8
-			const isBlueBkg = players[i].regionProximity(0, 0, 170, 5, 20, 95, 212) > 0.8
-			const whiteLetterFactor = players[i].regionContains(6, 24, 16, 16, 255, 255, 255, 0.8)
-			const isWhiteLetters = whiteLetterFactor > 0
-			console.log("player", i, "color", isYellowBkg, isRedBkg, redBkgFactor, isBlueBkg, isWhiteLetters, whiteLetterFactor)
-			
-			if (isYellowBkg)
-			{
-				players[i].binarize(255, 255, 255, 0.775)
-				scores[i].binarize(255, 255, 255, 0.7)
-			}
-			else if (isRedBkg)
-			{
-				if (isWhiteLetters)
-				{
-					players[i].binarize(255, 255, 255, 0.7)
-					scores[i].binarize(255, 255, 255, 0.7)
-				}
-				else
-				{
-					players[i].binarize(122, 0, 10, 0.9)
-					scores[i].binarize(122, 0, 10, 0.9)
-				}
-			}
-			else if (isBlueBkg)
-			{
-				if (isWhiteLetters)
-				{
-					players[i].binarize(255, 255, 255, 0.7)
-					scores[i].binarize(255, 255, 255, 0.7)
-				}
-				else
-				{
-					players[i].binarize(7, 54, 106, 0.9)
-					scores[i].binarize(7, 54, 106, 0.9)
-				}
-			}
-			else
-			{
-				players[i].binarize(255, 255, 255, 0.7)
-				scores[i].binarize(255, 255, 255, 0.7)
-			}
-		}
+			players[i].binarize(255, 255, 255, 0.9)
+
+		for (let i = 0; i < scores.length; i++)
+			scores[i].binarize(255, 255, 255, 0.9)
 		
 		if (cache)
 		{
 			for (let i = 0; i < players.length; i++)
-			{
 				players[i].createCache()
+
+			for (let i = 0; i < scores.length; i++)
 				scores[i].createCache()
-			}
 		}
 		
 		return { players, scores }
@@ -540,11 +480,11 @@ class ImageHelper
 		let x = 0
 		while (true)
 		{
-			let pBegin = this.findNextBinaryColumn(x, true, -0.1)
+			let pBegin = this.findNextBinaryColumn(x, true, 0)
 			if (pBegin == null)
 				break
 
-			let pixels = this.findConnectedRegion(pBegin.x, pBegin.y, 1, -0.1, 40)
+			let pixels = this.findConnectedRegion(pBegin.x, pBegin.y, 1, 0, 40)
 			if (pixels.length === 0)
 				break
 
@@ -559,7 +499,7 @@ class ImageHelper
 			if (charImage == null)
 				break
 
-			if (pBegin.x > x + 7 + 15)
+			if (pBegin.x > x + 8 + 15)
 				glyphs.push([null])
 
 			let advance = charImage.imageData.width
@@ -570,10 +510,10 @@ class ImageHelper
 				let image2 = this.clone()
 				image2.fillPixels(pixels, 0, 0, 0)
 
-				let pBegin2 = image2.findNextBinaryColumn(x2, true, -0.1)
+				let pBegin2 = image2.findNextBinaryColumn(x2, true, 0)
 				if (pBegin2 != null)
 				{
-					let pixels2 = image2.findConnectedRegion(pBegin2.x, pBegin2.y, 1, -0.1, 40)
+					let pixels2 = image2.findConnectedRegion(pBegin2.x, pBegin2.y, 1, 0, 40)
 					let charImage2 = this.extractPixels([...pixels, ...pixels2])
 					if (charImage2 != null)
 						entry = [charImage, charImage2]
@@ -779,7 +719,7 @@ class ImageHelper
 				pixelPositions.push(p)
 
 				for (let i = 0; i <= 0; i++)
-				for (let j = -lookUp; j <= -1; j++)
+				for (let j = -lookUp; j <= lookUp; j++)
 					remaining.push({ x: p.x + i + Math.round(j * slant), y: p.y + j })
 
 				for (let i = -1; i <= 1; i++)
@@ -940,7 +880,7 @@ class ImageHelper
 		let value = this.getBinaryPixel(x, y)
 
 		let dist = 100
-		let searchDist = 4
+		let searchDist = 2
 		for (let i = -searchDist; i <= searchDist; i++)
 		for (let j = -searchDist; j <= searchDist; j++)
 		{
@@ -954,7 +894,7 @@ class ImageHelper
 	
 	createCache()
 	{
-		if (this.cacheNearestBinaryPixel != null)
+		/*if (this.cacheNearestBinaryPixel != null)
 			return
 		
 		this.cacheNearestBinaryPixel = []
@@ -979,7 +919,7 @@ class ImageHelper
 			}
 		}
 
-		/*this.cacheBoundaryPoints = []
+		this.cacheBoundaryPoints = []
 		for (let y = 0; y < this.imageData.height; y++)
 		{
 			for (let x = 0; x < this.imageData.width; x++)
@@ -1019,7 +959,7 @@ class ImageHelper
 
 				this.cacheMinDistToBoundaryPoint[y].push(minDist)				
 			}
-		}*/
+		}
 		
 		this.cacheNextFilledColumn = []
 		this.cacheNextEmptyColumn = []
@@ -1031,7 +971,7 @@ class ImageHelper
 			this.cacheNextEmptyColumn.push(this.findNextBinaryColumn(x, false))
 			this.cachePrevFilledColumn.push(this.findPreviousBinaryColumn(x, true))
 			this.cacheColumnFilling.push(this.getColumnFilling(x))
-		}
+		}*/
 	}
 	
 	
@@ -1061,34 +1001,35 @@ class ImageHelper
 	
 	scoreGlyph(glyph, debug = false)
 	{
-		/*this.createCache()
-		glyph.data.createCache()
-
-		var totalDist = 0
-		for (const p of glyph.data.cacheBoundaryPoints)
-		{
-			totalDist += this.cacheDistanceToEdge[p.y][p.x] ?? 100
-		}
-		totalDist /= glyph.data.cacheBoundaryPoints.length
-		return 1 / (totalDist + 1)
-
-		
-		var totalDist = 0
-		for (let y = 0; y < Math.max(glyph.data.imageData.height, this.imageData.height); y++)
-		{
-			for (let x = 0; x < Math.max(glyph.data.imageData.width, this.imageData.width); x++)
-			{
-				totalDist +=
-					(this.cacheDistanceToEdge[y][x] ?? 100) *
-					(glyph.data.cacheDistanceToEdge[y][x] ?? 100)
-			}
-		}
-		totalDist /= Math.max(glyph.data.imageData.height, this.imageData.height) * Math.max(glyph.data.imageData.width, this.imageData.width)
-		return -totalDist
-		*/
-
-		let estimatedWidthDiff = Math.max(0, Math.abs(this.imageData.width - glyph.data.imageData.width) - 4)
+		let estimatedWidthDiff = Math.max(0, Math.abs(this.imageData.width - glyph.data.imageData.width) - 2)
 		let estimatedWidthBonus = (1 / (estimatedWidthDiff + 1)) * 0.1
+
+		let maxScore = 0
+
+		for (let xAdjust = -1; xAdjust <= 1; xAdjust++)
+		{
+			let totalPixels = 0
+			let samePixels = 0
+			
+			for (let y = 0; y < Math.max(glyph.data.imageData.height, this.imageData.height); y++)
+			{
+				for (let x = 0; x < Math.max(glyph.data.imageData.width, this.imageData.width); x++)
+				{
+					totalPixels++
+					if (this.getBinaryPixel(x + xAdjust, y) === glyph.data.getBinaryPixel(x, y))
+						samePixels++
+				}
+			}
+
+			let score = samePixels / totalPixels + estimatedWidthBonus
+			if (score > maxScore)
+				maxScore = score
+		}
+
+		return maxScore
+
+		/*let estimatedWidthDiff = Math.max(0, Math.abs(this.imageData.width - glyph.data.imageData.width) - 2)
+		let estimatedWidthBonus = (1 / (estimatedWidthDiff + 1)) * 1
 		
 		let totalPixels = 0
 		let matchingPixels = 0
@@ -1114,7 +1055,7 @@ class ImageHelper
 				if (this.getBinaryPixel(x, y) === glyph.data.getBinaryPixel(x, y))
 					matchingPixels += factor
 				else
-					nonMatchingPixels += factor * 4
+					nonMatchingPixels += factor
 			}
 		}
 
@@ -1124,7 +1065,7 @@ class ImageHelper
 		
 		//console.log(glyph.c, score, matchingPixels, nonMatchingPixels, totalPixels, estimatedWidthBonus)
 		
-		return score
+		return score*/
 	}
 	
 
@@ -1194,7 +1135,7 @@ class ImageHelper
 			return { str: "", confidence: filledPixels / 500 }
 
 
-		let isUppercase = (c) => {
+		/*let isUppercase = (c) => {
 			if (c == null)
 				return false
 			
@@ -1221,7 +1162,7 @@ class ImageHelper
 			
 			else if (c == "I" && (!isUppercase(prev) || !isUppercase(next)))
 				str = replaceChar(str, i, "l")
-		}
+		}*/
 
 		return { str: str, confidence: confidence }
 	}
