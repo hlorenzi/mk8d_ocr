@@ -455,10 +455,10 @@ class ImageHelper
 			scores.push(img.extractRegion(940, 116 + 71 * i, 80, 44))
 		
 		for (let i = 0; i < players.length; i++)
-			players[i].binarize(255, 255, 255, 0.9)
+			players[i].binarize(255, 255, 255, 0.8)
 
 		for (let i = 0; i < scores.length; i++)
-			scores[i].binarize(255, 255, 255, 0.9)
+			scores[i].binarize(255, 255, 255, 0.8)
 		
 		if (cache)
 		{
@@ -664,7 +664,9 @@ class ImageHelper
 				this.imageData.data[i * 4 + 1],
 				this.imageData.data[i * 4 + 2])
 			
-			let binary = factor > threshold ? 255 : 0
+			let binary = factor > threshold ?
+				255 : // 255 * (factor - threshold) / (1 - threshold) :
+				0
 			
 			this.imageData.data[i * 4 + 0] = binary
 			this.imageData.data[i * 4 + 1] = binary
@@ -732,7 +734,7 @@ class ImageHelper
 	}
 
 	
-	extractPixels(pixelPositions)
+	extractPixels(pixelPositions, xMargin = 0)
 	{
 		let xMin = 10000
 		let yMin = 10000
@@ -753,11 +755,11 @@ class ImageHelper
 			yMax - yMin <= 0)
 			return null
 
-		let region = ImageHelper.empty(xMax - xMin, this.imageData.height)//yMax - yMin)
+		let region = ImageHelper.empty(xMax - xMin + xMargin * 2, this.imageData.height)//yMax - yMin)
 		for (const p of pixelPositions)
 		{
 			let pixel = this.getPixel(p.x, p.y)
-			region.setPixel(p.x - xMin, p.y, pixel.r, pixel.g, pixel.b, pixel.a)
+			region.setPixel(p.x - xMin + xMargin, p.y, pixel.r, pixel.g, pixel.b, pixel.a)
 		}
 
 		return region
@@ -1006,7 +1008,8 @@ class ImageHelper
 
 		let maxScore = 0
 
-		for (let xAdjust = -1; xAdjust <= 1; xAdjust++)
+		for (let yAdjust = 0; yAdjust <= 0; yAdjust++)
+		for (let xAdjust = -2; xAdjust <= 2; xAdjust++)
 		{
 			let totalPixels = 0
 			let samePixels = 0
@@ -1016,7 +1019,7 @@ class ImageHelper
 				for (let x = 0; x < Math.max(glyph.data.imageData.width, this.imageData.width); x++)
 				{
 					totalPixels++
-					if (this.getBinaryPixel(x + xAdjust, y) === glyph.data.getBinaryPixel(x, y))
+					if (this.getBinaryPixel(x + xAdjust, y + yAdjust) === glyph.data.getBinaryPixel(x, y))
 						samePixels++
 				}
 			}
