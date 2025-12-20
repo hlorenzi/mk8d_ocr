@@ -43,4 +43,8 @@ let samples =
 	{ src: "samples/11.png",
 	names: ["WR||Yogurt Ace","Tяoвo_Tac","War","lolahmed","daphnee","RavenMilez","xKuroJet","CB","MC4","angel","VΛNDOX","Qj+-/*\\!:@;?"], 
 	scores: [15,12,10,9,8,7,6,5,4,3,2,1] },
+
+	{ src: "samples/12.png",
+	names: ["Magiclueless","lolahmed","RavenMilez","WAVE","SHADOW","EGG PAWN","OMEGA","BLAZE","VECTOR","ROUGE","JET","STORM"], 
+	scores: [30,24,20,16,11,9,15,11,12,7,7,2] },
 ]

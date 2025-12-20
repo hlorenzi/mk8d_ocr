@@ -3,6 +3,7 @@ class ImageHelper
 	constructor()
 	{
 		this.imageData = null
+		this.cacheDistanceToEdge = null
 		this.cacheNearestBinaryPixel = null
 		this.cacheNextFilledColumn = null
 		this.cachePrevFilledColumn = null
@@ -140,8 +141,6 @@ class ImageHelper
 		
 		let image = new ImageHelper()
 		image.imageData = new ImageData(array, w, h)
-		
-		image.createCache()
 		return image
 	}
 	
@@ -182,8 +181,6 @@ class ImageHelper
 		
 		let image = new ImageHelper()
 		image.imageData = new ImageData(array, w, h)
-		
-		image.createCache()
 		return image
 	}
 	
@@ -202,8 +199,6 @@ class ImageHelper
 		
 		let image = new ImageHelper()
 		image.imageData = new ImageData(array, w, h)
-		
-		image.createCache()
 		return image
 	}
 	
@@ -276,7 +271,22 @@ class ImageHelper
 	}
 	
 	
-	makeCanvas()
+	addMargin(w, h)
+	{
+		let canvasBefore = this.makeCanvas()
+		
+		let canvasAfter = document.createElement("canvas")
+		canvasAfter.width = this.imageData.width + w * 2
+		canvasAfter.height = this.imageData.height + h * 2
+		
+		let ctx = canvasAfter.getContext("2d")
+		ctx.drawImage(canvasBefore, w, h, this.imageData.width, this.imageData.height)
+		
+		return ImageHelper.fromCanvas(canvasAfter)
+	}
+	
+	
+	makeCanvas(debug = false)
 	{
 		let canvas = document.createElement("canvas")
 		canvas.width = this.imageData.width
@@ -287,19 +297,23 @@ class ImageHelper
 		let ctx = canvas.getContext("2d")
 		ctx.putImageData(this.imageData, 0, 0)
 
-		/*let cloned = this.clone()
-		this.createCache()
-		for (let y = 0; y < this.imageData.height; y++)
+		if (debug)
 		{
-			for (let x = 0; x < this.imageData.width; x++)
+			this.createCache()
+			let cloned = this.clone()
+			for (let y = 0; y < this.imageData.height; y++)
 			{
-				if (this.cacheDistanceToEdge[y][x] < 100)
-					cloned.setPixel(x, y, Math.min(255, Math.floor(this.cacheDistanceToEdge[y][x] * (255 / 4))), 0, 0, 255)
+				for (let x = 0; x < this.imageData.width; x++)
+				{
+					const maxDist = 4
+					const dist = Math.min(maxDist, this.cacheDistanceToEdge[y][x])
+					const c = dist === 1 ? 255 : 0// Math.min(255, Math.floor(dist * (255 / maxDist)))
+					cloned.setPixel(x, y, c, 0, 0, 255)
+				}
 			}
-		}
 
-		let ctx = canvas.getContext("2d")
-		ctx.putImageData(cloned.imageData, 0, 0)*/
+			ctx.putImageData(cloned.imageData, 0, 0)
+		}
 		
 		return canvas
 	}
@@ -458,16 +472,7 @@ class ImageHelper
 			players[i].binarize(255, 255, 255, 0.8)
 
 		for (let i = 0; i < scores.length; i++)
-			scores[i].binarize(255, 255, 255, 0.8)
-		
-		if (cache)
-		{
-			for (let i = 0; i < players.length; i++)
-				players[i].createCache()
-
-			for (let i = 0; i < scores.length; i++)
-				scores[i].createCache()
-		}
+			scores[i].binarize(255, 255, 132, 0.8)
 		
 		return { players, scores }
 	}
@@ -475,6 +480,8 @@ class ImageHelper
 
 	extractPlayerGlyphs()
 	{
+		const xMargin = 2
+
 		let glyphs = []
 
 		let x = 0
@@ -495,18 +502,18 @@ class ImageHelper
 				continue
 			}
 
-			let charImage = this.extractPixels(pixels)
+			let charImage = this.extractPixels(pixels, xMargin)
 			if (charImage == null)
 				break
 
 			if (pBegin.x > x + 8 + 15)
 				glyphs.push([null])
 
-			let advance = charImage.imageData.width
+			let advance = charImage.imageData.width - xMargin
 			let entry = [charImage]
 
 			{
-				let x2 = pBegin.x + charImage.imageData.width - 15
+				let x2 = pBegin.x + charImage.imageData.width - xMargin - 15
 				let image2 = this.clone()
 				image2.fillPixels(pixels, 0, 0, 0)
 
@@ -514,7 +521,7 @@ class ImageHelper
 				if (pBegin2 != null)
 				{
 					let pixels2 = image2.findConnectedRegion(pBegin2.x, pBegin2.y, 1, 0, 40)
-					let charImage2 = this.extractPixels([...pixels, ...pixels2])
+					let charImage2 = this.extractPixels([...pixels, ...pixels2], xMargin)
 					if (charImage2 != null)
 						entry = [charImage, charImage2]
 				}
@@ -892,23 +899,18 @@ class ImageHelper
 		
 		return dist
 	}
+
+
+	clearCache()
+	{
+		this.cacheDistanceToEdge = null
+	}
 	
 	
 	createCache()
 	{
-		/*if (this.cacheNearestBinaryPixel != null)
+		if (this.cacheDistanceToEdge)
 			return
-		
-		this.cacheNearestBinaryPixel = []
-		for (let y = 0; y < this.imageData.height; y++)
-		{
-			this.cacheNearestBinaryPixel.push([])
-			for (let x = 0; x < this.imageData.width; x++)
-			{
-				this.cacheNearestBinaryPixel[y].push(
-					this.getNearestBinaryPixel(x, y, 0, 0, this.imageData.width, this.imageData.height, true))
-			}
-		}
 		
 		this.cacheDistanceToEdge = []
 		for (let y = 0; y < this.imageData.height; y++)
@@ -918,6 +920,17 @@ class ImageHelper
 			{
 				this.cacheDistanceToEdge[y].push(
 					this.getDistanceToEdge(x, y, 0, 0, this.imageData.width, this.imageData.height))
+			}
+		}
+		
+		/*this.cacheNearestBinaryPixel = []
+		for (let y = 0; y < this.imageData.height; y++)
+		{
+			this.cacheNearestBinaryPixel.push([])
+			for (let x = 0; x < this.imageData.width; x++)
+			{
+				this.cacheNearestBinaryPixel[y].push(
+					this.getNearestBinaryPixel(x, y, 0, 0, this.imageData.width, this.imageData.height, true))
 			}
 		}
 
@@ -1006,7 +1019,9 @@ class ImageHelper
 		let estimatedWidthDiff = Math.max(0, Math.abs(this.imageData.width - glyph.data.imageData.width) - 2)
 		let estimatedWidthBonus = (1 / (estimatedWidthDiff + 1)) * 0.1
 
-		let maxScore = 0
+		let maxScore = -Infinity
+
+		let debugStr = null
 
 		for (let yAdjust = 0; yAdjust <= 0; yAdjust++)
 		for (let xAdjust = -2; xAdjust <= 2; xAdjust++)
@@ -1018,16 +1033,40 @@ class ImageHelper
 			{
 				for (let x = 0; x < Math.max(glyph.data.imageData.width, this.imageData.width); x++)
 				{
-					totalPixels++
+					let dist1 = this.cacheDistanceToEdge[y + yAdjust][x + xAdjust]
+					if (x + xAdjust < 0 || y + yAdjust < 0 || x + xAdjust >= this.imageData.width || y + yAdjust >= this.imageData.height)
+						dist1 = 100
+
+					let dist2 = glyph.data.cacheDistanceToEdge[y][x]
+					if (x < 0 || y < 0 || x >= glyph.data.imageData.width || y >= glyph.data.imageData.height)
+						dist2 = 100
+
+					const maxDist = 4
+					const acceptDist = 1
+					
+					totalPixels += 1
+					if ((dist1 <= acceptDist) === (dist2 <= acceptDist))
+						samePixels++
+					else
+						samePixels += Math.max(0, 1 - (Math.abs(dist1 - dist2) / maxDist))
+
+					totalPixels += 1
 					if (this.getBinaryPixel(x + xAdjust, y + yAdjust) === glyph.data.getBinaryPixel(x, y))
 						samePixels++
 				}
 			}
 
-			let score = samePixels / totalPixels + estimatedWidthBonus
+			let score = samePixels / totalPixels// + estimatedWidthBonus
 			if (score > maxScore)
+			{
 				maxScore = score
+				if (debug)
+					debugStr = `score = ${samePixels.toFixed(2)} / ${totalPixels} = ${(score * 100).toFixed(2)}%`
+			}
 		}
+
+		if (debug)
+			return debugStr
 
 		return maxScore
 
@@ -1097,9 +1136,12 @@ class ImageHelper
 				if (glyph.skip)
 					continue
 				
+				glyph.data.createCache()
+				
 				for (let s = 0; s < char.length; s++)
 				{
 					const subchar = char[s]
+					subchar.createCache()
 
 					let score = subchar.scoreGlyph(glyph, debug)
 					if (score == null)
@@ -1193,9 +1235,12 @@ class ImageHelper
 				if (glyph.skip)
 					continue
 				
+				glyph.data.createCache()
+				
 				for (let s = 0; s < char.length; s++)
 				{
 					const subchar = char[s]
+					subchar.createCache()
 
 					let score = subchar.scoreGlyph(glyph, debug)
 					if (score == null)

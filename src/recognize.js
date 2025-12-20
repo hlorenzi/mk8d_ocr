@@ -1,6 +1,7 @@
 let recognizedNames = []
 let recognizedScores = []
 let finishedNum = 0
+let debugElem = null
 
 
 function setImage(input)
@@ -29,11 +30,11 @@ function recognizeResults(div, img)
 	{
 		let tr = document.createElement("tr")
 
-		let nameCanvas = players[p].makeCanvas()
+		let nameCanvas = players[p].makeCanvas(true)
 		let td1 = document.createElement("td")
 		td1.appendChild(nameCanvas)
 		tr.appendChild(td1)
-		
+
 		//let td2 = document.createElement("td")
 		//td2.appendChild(flags[p].makeCanvas())
 		//tr.appendChild(td2)
@@ -78,6 +79,8 @@ function recognizeResults(div, img)
 		
 		nameCanvas.onclick = () =>
 		{
+			printDebug(players[p])
+
 			console.log("\"" + recognizedNames[p] + "\"")
 			let worker = new Worker("src/worker_name.js")
 			worker.postMessage({ kind: "name", img: players[p], debug: true, nameGlyphs: nameGlyphs })
@@ -103,4 +106,72 @@ function printSample()
 	str += "\tscores: " + JSON.stringify(recognizedScores) + " },"
 	
 	console.log(str)
+}
+
+
+function printDebug(player)
+{
+	if (debugElem !== null)
+		document.body.removeChild(debugElem)
+
+	debugElem = document.createElement("div")
+	document.body.appendChild(debugElem)
+	
+	const chars = player.clone().extractPlayerGlyphs()
+	for (let c = 0; c < chars.length; c++)
+	{
+		const char = chars[c]
+		
+		const scores = []
+		for (let glyph of nameGlyphs)
+		{
+			glyph.data.createCache()
+
+			for (let s = 0; s <= 0; s++)// char.length; s++)
+			{
+				const subchar = char[s]
+				subchar.createCache()
+
+				let score = subchar.scoreGlyph(glyph)
+				if (score == null)
+					continue
+
+				let debug = subchar.scoreGlyph(glyph, true)
+
+				scores.push({ score, glyph, debug })
+			}
+		}
+
+		scores.sort((a, b) => b.score - a.score)
+		console.log(scores)
+
+		for (let scoredGlyph of scores.slice(0, 10))
+		{
+			const glyph = scoredGlyph.glyph
+			glyph.data.createCache()
+
+			/*let str = ""
+			for (let y = 0; y < subchar.imageData.height; y++)
+			{
+				for (let x = 0; x < subchar.imageData.width; x++)
+					str += subchar.imageData.data[(y * subchar.imageData.width + x) * 4].toString().padStart(3) + ":" + subchar.cacheDistanceToEdge[y][x].toString().padStart(3) + " "
+				str += "\n"
+			}
+			console.log(str)*/
+			
+			let canvas1 = char[0].makeCanvas(true)
+			canvas1.style.paddingRight = "2px"
+			let canvas2 = glyph.data.makeCanvas(true)
+			let div = document.createElement("div")
+			let span = document.createElement("span")
+			span.innerHTML = scoredGlyph.debug
+			div.appendChild(canvas1)
+			div.appendChild(canvas2)
+			div.appendChild(span)
+			debugElem.appendChild(div)
+		}
+			
+		debugElem.appendChild(document.createElement("br"))
+		debugElem.appendChild(document.createElement("br"))
+	}
 }
